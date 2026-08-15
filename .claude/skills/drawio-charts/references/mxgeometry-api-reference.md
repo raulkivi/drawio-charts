@@ -226,6 +226,6 @@ geometry.swap();
 ## See Also
 
 - [mxCell API Reference](mxcell-api-reference.md)
-- [Draw.io Format Reference](drawio-format-reference.md)
+- [Draw.io Format Reference](format-reference.md)
 - [mxPoint](https://jgraph.github.io/mxgraph/docs/js-api/files/util/mxPoint-js.html)
 - [mxRectangle](https://jgraph.github.io/mxgraph/docs/js-api/files/util/mxRectangle-js.html)

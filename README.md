@@ -1,31 +1,32 @@
-# draw.io Charts Project
+# draw.io Charts Skill
 
-Purpose
+An [Agent Skill](https://docs.claude.com/en/docs/claude-code/skills) that teaches Claude (in Claude Code, the VS Code extension, or any other Claude Code-compatible surface) how to generate and edit [draw.io](https://www.drawio.com/) (`diagrams.net`) diagrams — directly as XML, with no draw.io application required.
 
-This repository provides resources, templates, and programmatic guidance for creating and managing draw.io diagrams. It is focused on making reproducible, scriptable diagrams (XML `mxfile` files) and includes style references, examples, and conventions to support automation and consistency.
+## What it does
 
-Project structure
+Point Claude at this skill and ask for a flowchart, architecture diagram, network diagram, org chart, ER diagram, or sequence diagram, and it will produce a valid `.drawio` file: correct `mxfile`/`mxGraphModel`/`mxCell` structure, consistent styling, and unique/well-formed ids and connections.
 
-- `diagrams/`: Editable diagram files organized by category (e.g. `architecture/`, `samples/`). Diagram files use the `.drawio` extension. Note: this checkout includes `diagrams/samples/` with example diagrams.
-- `docs/`: Human-readable documentation and references for the draw.io XML format and styling. Files include `drawio-quickstart.md`, `drawio-format-reference.md`, `drawio-style-reference.md`, `mxcell-api-reference.md`, and `mxgeometry-api-reference.md`.
-- `.github/copilot-instructions.md`: Contributor guidance and programmatic editing patterns for this workspace (contains shape libraries, XML skeletons, and best practices).
-- `.gitignore`: The repository ignores `*.drawio` files by default to avoid committing binary/large diagram files; update as needed.
-- `exports/` (optional): Recommended location for exported images (`.svg`, `.png`, `.pdf`) and generated artifacts.
+## Structure
 
-Getting started
+```
+.claude/skills/drawio-charts/
+├── SKILL.md                          # Entry point: workflow, skeleton, style cheatsheet, conventions
+├── references/                       # Loaded on demand for the full API/format detail
+│   ├── format-reference.md           # mxfile / mxGraphModel / mxCell XML structure
+│   ├── style-reference.md            # Full style property tables
+│   ├── mxcell-api-reference.md       # mxCell JS API (for scripted generation)
+│   └── mxgeometry-api-reference.md   # mxGeometry JS API: positioning, waypoints
+└── assets/examples/
+    └── company-network.drawio        # Worked example diagram
+```
 
-1. Clone the repository and open it in VS Code.
-2. Install the Draw.io integration extension (ID: `hediet.vscode-drawio`).
-3. Open files under `diagrams/` to view or edit them with the extension.
-4. Follow the programmatic patterns in `.github/copilot-instructions.md` when generating or editing diagrams by script.
+`SKILL.md` is the always-loaded summary; the `references/` docs are pulled in only when a task needs that level of detail (progressive disclosure keeps the skill cheap to keep loaded).
 
-Contributing
+## Using it
 
-- Add new diagram templates under `diagrams/` and keep each diagram's purpose clear in its filename.
-- Use the `docs/` guides and `.github/copilot-instructions.md` for conventions: unique `mxCell` ids, `parent="1"`, consistent styles, and image paths for libraries.
+- **Claude Code / VS Code extension**: open this repository (or copy `.claude/skills/drawio-charts/` into another project's `.claude/skills/`) — the skill is discovered automatically and activates when you ask for a draw.io diagram.
+- **Previewing a result**: install the **Draw.io Integration** VS Code extension (`hediet.vscode-drawio`) to open `.drawio` files in a visual editor.
 
-Documentation
+## Scratch space
 
-See the `docs/` folder for format and style references and `.github/copilot-instructions.md` for workspace-specific guidelines and shape library lists.
-
-Open the Draw.io extension to preview diagrams and verify shapes and connectors render correctly.
+`diagrams/` (gitignored) is a convenient default location for diagrams you ask Claude to create while working in this repo — point it elsewhere if you'd rather organize by project.

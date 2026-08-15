@@ -186,5 +186,5 @@ graph.convertValueToString = function(cell) {
 ## See Also
 
 - [mxGeometry API Reference](mxgeometry-api-reference.md)
-- [Draw.io Format Reference](drawio-format-reference.md)
+- [Draw.io Format Reference](format-reference.md)
 - [mxGraph Manual](https://jgraph.github.io/mxgraph/docs/manual.html)

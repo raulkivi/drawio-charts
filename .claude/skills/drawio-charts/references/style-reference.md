@@ -325,6 +325,6 @@ Use in XML:
 
 ## See Also
 
-- [Draw.io Format Reference](drawio-format-reference.md)
+- [Draw.io Format Reference](format-reference.md)
 - [mxCell API Reference](mxcell-api-reference.md)
 - [mxConstants Reference](https://jgraph.github.io/mxgraph/docs/js-api/files/util/mxConstants-js.html)
