@@ -1,0 +1,23 @@
+{
+  "name": "drawio-charts",
+  "displayName": "draw.io Charts",
+  "version": "1.0.0",
+  "description": "Create and edit draw.io (diagrams.net) .drawio XML diagrams — flowcharts, architecture diagrams, network diagrams, ER diagrams, and more.",
+  "author": {
+    "name": "Raul Kivi",
+    "url": "https://github.com/raulkivi"
+  },
+  "homepage": "https://github.com/raulkivi/drawio-charts",
+  "repository": "https://github.com/raulkivi/drawio-charts",
+  "license": "MIT",
+  "keywords": [
+    "drawio",
+    "diagrams.net",
+    "diagrams",
+    "flowchart",
+    "architecture-diagram",
+    "network-diagram",
+    "skill",
+    "agent-skill"
+  ]
+}

@@ -1,0 +1,50 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON manifests
+        run: |
+          python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+          python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))"
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python3 - <<'EOF'
+          import pathlib, sys
+
+          skill = pathlib.Path("skills/drawio-charts/SKILL.md").read_text()
+          assert skill.startswith("---\n"), "SKILL.md must start with YAML frontmatter"
+          end = skill.index("\n---", 4)
+          frontmatter = skill[4:end]
+          assert "name:" in frontmatter, "SKILL.md frontmatter missing 'name'"
+          assert "description:" in frontmatter, "SKILL.md frontmatter missing 'description'"
+          print("SKILL.md frontmatter OK")
+          EOF
+
+      - name: Validate .drawio example XML
+        run: |
+          python3 - <<'EOF'
+          import glob
+          import xml.dom.minidom as minidom
+
+          files = glob.glob("skills/drawio-charts/**/*.drawio", recursive=True)
+          assert files, "no .drawio example files found"
+          for f in files:
+              minidom.parse(f)
+              print(f"{f}: well-formed XML")
+          EOF
+
+      - name: Check skill/plugin symlink is intact
+        run: |
+          test -L .claude/skills/drawio-charts
+          test -d .claude/skills/drawio-charts
+          echo "symlink OK"

@@ -1,0 +1,17 @@
+{
+  "marketplaceName": "drawio-charts",
+  "version": "1",
+  "plugins": [
+    {
+      "name": "drawio-charts",
+      "displayName": "draw.io Charts",
+      "description": "Create and edit draw.io (diagrams.net) .drawio XML diagrams — flowcharts, architecture diagrams, network diagrams, ER diagrams, and more.",
+      "version": "1.0.0",
+      "source": {
+        "type": "github",
+        "owner": "raulkivi",
+        "repo": "drawio-charts"
+      }
+    }
+  ]
+}
