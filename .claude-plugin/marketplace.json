@@ -1,17 +1,24 @@
 {
-  "marketplaceName": "drawio-charts",
-  "version": "1",
+  "name": "drawio-charts",
+  "description": "draw.io (diagrams.net) diagram generation for Claude Code.",
+  "owner": {
+    "name": "Raul Kivi",
+    "url": "https://github.com/raulkivi"
+  },
   "plugins": [
     {
       "name": "drawio-charts",
       "displayName": "draw.io Charts",
       "description": "Create and edit draw.io (diagrams.net) .drawio XML diagrams — flowcharts, architecture diagrams, network diagrams, ER diagrams, and more.",
       "version": "1.0.0",
-      "source": {
-        "type": "github",
-        "owner": "raulkivi",
-        "repo": "drawio-charts"
-      }
+      "author": {
+        "name": "Raul Kivi",
+        "url": "https://github.com/raulkivi"
+      },
+      "homepage": "https://github.com/raulkivi/drawio-charts",
+      "repository": "https://github.com/raulkivi/drawio-charts",
+      "license": "MIT",
+      "source": "./"
     }
   ]
 }
