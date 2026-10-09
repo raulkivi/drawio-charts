@@ -52,7 +52,7 @@ Install the **Draw.io Integration** VS Code extension (`hediet.vscode-drawio`) t
 
 ## Contributing
 
-Issues and PRs welcome — especially additional worked examples under `skills/drawio-charts/assets/examples/` or gaps found in the style/format references. `.github/workflows/validate.yml` checks that the manifests are valid JSON, `SKILL.md` has the required frontmatter, and example `.drawio` files are well-formed XML.
+Issues and PRs welcome — especially additional worked examples under `skills/drawio-charts/assets/examples/` or gaps found in the style/format references. `.github/workflows/validate.yml` runs `claude plugin validate --strict` on the plugin and marketplace manifests (run it locally with `claude plugin validate --strict .` before opening a PR), checks that `SKILL.md` has the required frontmatter, and example `.drawio` files are well-formed XML.
 
 ## License
 
