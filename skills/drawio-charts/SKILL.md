@@ -110,6 +110,10 @@ See `assets/examples/company-network.drawio` for a complete worked example (inte
 - IDs: short, descriptive, unique within the file (`router`, `ws1`, `e-switch-ws1`) rather than opaque UUIDs — makes diffs and later edits legible.
 - When editing an existing `.drawio` file, preserve unrelated cells exactly; only touch the `mxCell` elements you intend to change, and never split an element's opening/closing tags across separate edits.
 
+## Escaping text
+
+Labels and attribute values are XML. Escape `&` as `&amp;`, `<` as `&lt;`, `>` as `&gt;` and `"` as `&quot;`, including text copied from the user or a file. With `html=1` in the style, a literal `<` in a label must be `&lt;` twice-escaped as `&amp;lt;`. Never put unescaped user text in an `value="..."` attribute.
+
 ## Validation checklist
 
 Before treating a diagram as finished, confirm:

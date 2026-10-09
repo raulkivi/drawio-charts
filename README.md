@@ -56,4 +56,6 @@ Issues and PRs welcome — especially additional worked examples under `skills/d
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE).
+
+The files in `skills/drawio-charts/references/` summarise the [mxGraph](https://github.com/jgraph/mxgraph) API documentation, which is licensed under [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0). Copyright the respective mxGraph / JGraph authors. This project is not affiliated with or endorsed by draw.io or JGraph.
