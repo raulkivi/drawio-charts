@@ -50,6 +50,17 @@ class LinksTest(unittest.TestCase):
         unmentioned = [path for path in bundled if path not in text]
         self.assertEqual(unmentioned, [])
 
+    def test_script_commands_use_the_skill_dir_path(self):
+        # A relative `scripts/...` invites `cd` into the skill directory, which
+        # moves the shell away from the user's files (and, sandboxed, loses write
+        # access to them). Commands must name the script under <skill-dir>.
+        text = SKILL_MD.read_text(encoding="utf-8")
+        commands = re.findall(r"`(python3 [^`]+)`", text)
+        self.assertTrue(commands)
+        relative = [c for c in commands if not c.startswith("python3 <skill-dir>/scripts/")]
+        self.assertEqual(relative, [])
+        self.assertNotIn("relative to this skill's directory", text)
+
     def test_long_references_have_a_table_of_contents(self):
         for path in (SKILL_DIR / "references").glob("*.md"):
             text = path.read_text(encoding="utf-8")

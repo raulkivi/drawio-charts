@@ -13,12 +13,14 @@ Generate and edit `.drawio` files directly as XML — no draw.io application is 
 2. Open the matching example from the table under "Diagram types" and copy its patterns. Each one encodes the shapes, styles and nesting that type needs.
 3. Work out rows, columns and coordinates before writing any cells (see "Layout"), then write the XML from the skeleton below: one `mxCell` per shape and one per connector.
 4. Style consistently: the same kind of element gets the same shape and palette entry.
-5. Run `python3 scripts/validate_drawio.py <file>` (path relative to this skill's directory) and fix every issue it reports. It checks ids, parents, edge endpoints, geometry and style separators, which are the mistakes that make draw.io drop cells or refuse to open the file. Then read through the Validation checklist for what a script can't judge.
+5. Run `python3 <skill-dir>/scripts/validate_drawio.py <file>` and fix every issue it reports. It checks ids, parents, edge endpoints, geometry and style separators, which are the mistakes that make draw.io drop cells or refuse to open the file. Then read through the Validation checklist for what a script can't judge.
 6. Mention that the user can open the file in draw.io or the `hediet.vscode-drawio` VS Code extension to see it. Don't depend on that to verify correctness.
+
+**Running the scripts.** `<skill-dir>` is the directory this SKILL.md is in. Run the scripts from the user's working directory, giving the script's full path and the diagram's usual path. Don't `cd` into the skill directory: the shell's working directory carries over to later commands, so relative paths then point at the wrong place, and in a sandboxed session only the original working directory may be writable.
 
 ### Editing an existing file
 
-1. Check whether each `<diagram>` holds an `<mxGraphModel>` or a block of base64-looking text. Text means the page is compressed. Run `python3 scripts/decompress_drawio.py <file> --in-place`, which decodes every compressed page and keeps the others as they are. Use the script rather than decoding by hand: draw.io's encoding is deflate plus URL-encoding, so a hand decode is easy to get subtly wrong. draw.io opens the plain form just as well.
+1. Check whether each `<diagram>` holds an `<mxGraphModel>` or a block of base64-looking text. Text means the page is compressed. Run `python3 <skill-dir>/scripts/decompress_drawio.py <file> --in-place`, which decodes every compressed page and keeps the others as they are. Use the script rather than decoding by hand: draw.io's encoding is deflate plus URL-encoding, so a hand decode is easy to get subtly wrong. draw.io opens the plain form just as well.
 2. A file can have several pages. Apply the change to each page it concerns ("on both pages", or a component that appears on several), and leave the other pages alone.
 3. Keep existing ids, labels and styles. Move existing shapes only to make room, and say which ones you moved.
 4. "Put X between A and B" means reroute: replace the A→B edge with A→X and X→B, unless the user says A should still reach B directly. If X belongs in a container that A and B are in, give it that container's id as `parent` and container-relative coordinates.
@@ -170,8 +172,8 @@ Before treating a diagram as finished, confirm:
 
 ## Bundled resources
 
-- `scripts/validate_drawio.py` — structural validator: `python3 scripts/validate_drawio.py FILE...`. Exits 1 and prints one line per issue. Standard library only
-- `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
+- `scripts/validate_drawio.py` — structural validator: `python3 <skill-dir>/scripts/validate_drawio.py FILE...`. Exits 1 and prints one line per issue. Standard library only
+- `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 <skill-dir>/scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
 - `scripts/drawio_io.py` — shared file-reading helpers used by both scripts
 - `references/format-reference.md` — XML structure in full: pages, cells, parents (layers, containers, edge labels), absolute and relative geometry, waypoints, `UserObject` custom properties, compressed pages. Read it for anything nested or unusual
 - `references/style-reference.md` — every style property (fill, stroke, text, edges, arrows including ER ends, containers, images, named styles)
