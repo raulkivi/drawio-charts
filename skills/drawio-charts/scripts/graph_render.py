@@ -150,6 +150,9 @@ def plan_layout(spec: GraphSpec) -> Plan:
 
     nodes = {n.id: n for n in spec.nodes}
     groups = {g.id: g for g in _walk(spec.groups)}
+    # side-by-side ranks need room for edge labels between them
+    widest_label = max((text_width(e.label) for e in spec.edges if e.label), default=0)
+    rank_gap = max(60, round_up(widest_label + 50)) if spec.direction in ("LR", "RL") else 60
 
     def lay_out(level: str | None) -> Box:
         members = [n.id for n in spec.nodes if owner[n.id] == level]
@@ -162,7 +165,7 @@ def plan_layout(spec: GraphSpec) -> Plan:
                                   content.height + 2 * GROUP_PAD + GROUP_HEADER)
         children = members + subgroups
         result = layered_layout([(c, sizes[c].width, sizes[c].height) for c in children],
-                                level_edges.get(level, []), spec.direction)
+                                level_edges.get(level, []), spec.direction, rank_gap=rank_gap)
         if level is ROOT:
             dx, dy = MARGIN, MARGIN
         else:

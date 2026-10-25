@@ -176,6 +176,7 @@ Before treating a diagram as finished, confirm:
 - `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 <skill-dir>/scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
 - `scripts/drawio_io.py` — shared file-reading helpers used by both scripts
 - `scripts/layout_drawio.py` — lays out a graph spec (JSON written from a Mermaid diagram) and writes a `.drawio` file: `python3 <skill-dir>/scripts/layout_drawio.py SPEC.json -o OUT.drawio`. Its helpers: `scripts/graph_spec.py` (spec parsing and checks), `scripts/layered_layout.py` (layered graph layout), `scripts/graph_render.py` (flowchart, state, class and ER diagrams), `scripts/sequence_render.py` (sequence diagrams), `scripts/drawio_writer.py` (XML output) and `scripts/text_metrics.py` (label sizing)
+- `scripts/render_drawio_svg.py` — renders a `.drawio` file as an editable `.drawio.svg` (an SVG image that carries the diagram, so GitHub/GitLab show it and draw.io opens it), without the draw.io app: `python3 <skill-dir>/scripts/render_drawio_svg.py IN.drawio -o OUT.drawio.svg`
 - `references/format-reference.md` — XML structure in full: pages, cells, parents (layers, containers, edge labels), absolute and relative geometry, waypoints, `UserObject` custom properties, compressed pages. Read it for anything nested or unusual
 - `references/style-reference.md` — every style property (fill, stroke, text, edges, arrows including ER ends, containers, images, named styles)
 - `assets/examples/*.drawio` — one complete example per diagram type (table above)

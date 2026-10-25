@@ -18,6 +18,7 @@ Point = tuple[float, float]
 DUMMY_BREADTH = 20.0
 SWEEPS = 24
 PLACEMENT_PASSES = 8
+DUMMY_PULL = 0.3
 
 
 @dataclass(frozen=True)
@@ -240,8 +241,10 @@ def _place_cross_axis(layers: list[list[str]], proper: list[tuple[str, str]],
         for layer in layers:
             desired = []
             for node in layer:
-                linked = [centre[m] for m in neighbours[node]]
-                desired.append(sum(linked) / len(linked) if linked else centre[node])
+                # real neighbours pull harder than the dummy points of long edges
+                weights = [(centre[m], DUMMY_PULL if m.startswith("\0") else 1.0) for m in neighbours[node]]
+                total = sum(w for _, w in weights)
+                desired.append(sum(c * w for c, w in weights) / total if weights else centre[node])
             pushed_right, pushed_left = [], []
             for i, node in enumerate(layer):
                 start = desired[i] - breadth[node] / 2

@@ -232,7 +232,7 @@ class _ItemRenderer:
                 guard_y = (top + 2) if not i else section_top + 2
                 guard_id = self.b.new_id("guard")
                 label = html_label(f"[{section.label}]")
-                self.s.frames.append(lambda guard_id=guard_id, label=label, gx=guard_x, gy=guard_y: self.b.vertex(
+                self.s.notes.append(lambda guard_id=guard_id, label=label, gx=guard_x, gy=guard_y: self.b.vertex(
                     guard_id, label, GUARD_STYLE, "1", gx, gy, max(80, right - gx - 10), 22))
             self.items(section.items, depth + 1)
         bottom = self.s.y - 10

@@ -14,6 +14,8 @@ from dataclasses import dataclass
 # draw.io wraps cells that carry custom properties in one of these elements;
 # the wrapper then holds the id and label, and the inner mxCell everything else.
 WRAPPER_TAGS = ("UserObject", "object")
+# A .drawio.svg is an SVG image carrying the draw.io document in its content attribute.
+SVG_TAG = "{http://www.w3.org/2000/svg}svg"
 
 
 class DrawioFormatError(Exception):
@@ -60,6 +62,11 @@ def parse_pages(text: str) -> list[Page]:
     except ET.ParseError as error:
         raise DrawioFormatError(f"XML is not well-formed: {error}") from None
 
+    if root.tag == SVG_TAG:
+        content = root.get("content")
+        if not content:
+            raise DrawioFormatError("SVG has no embedded draw.io diagram (no content attribute)")
+        return parse_pages(content)
     if root.tag == "mxGraphModel":
         return [Page(name=None, id=None, model=root)]
     diagrams = root.findall("diagram")

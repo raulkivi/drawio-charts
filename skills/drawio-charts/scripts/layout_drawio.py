@@ -2,6 +2,7 @@
 """Lay out a graph spec (JSON) and write it as a .drawio file.
 
 Usage: python3 layout_drawio.py SPEC.json -o OUT.drawio
+       python3 layout_drawio.py SPEC.json -o OUT.drawio.svg   (editable SVG for docs)
        (SPEC may be "-" to read the spec from stdin)
 
 The spec format is in references/mermaid-mapping.md. Exits 2 when the spec
@@ -18,6 +19,7 @@ from pathlib import Path
 
 from graph_render import render_graph
 from graph_spec import GRAPH_TYPES, Spec, SpecError, parse_spec
+from render_drawio_svg import render_svg
 from sequence_render import render_sequence
 
 RENDERERS: dict[str, Callable[[Spec], str]] = {
@@ -35,7 +37,7 @@ def convert(spec: Spec) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("spec", help='spec JSON file, or "-" for stdin')
-    parser.add_argument("-o", "--output", required=True, help="output .drawio path")
+    parser.add_argument("-o", "--output", required=True, help="output path: .drawio, or .drawio.svg to render")
     args = parser.parse_args(argv)
     try:
         text = sys.stdin.read() if args.spec == "-" else Path(args.spec).read_text(encoding="utf-8")
@@ -43,7 +45,9 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, json.JSONDecodeError, SpecError) as error:
         print(f"spec error: {error}", file=sys.stderr)
         return 2
-    Path(args.output).write_text(convert(spec), encoding="utf-8")
+    xml = convert(spec)
+    output = render_svg(xml) if args.output.endswith(".svg") else xml
+    Path(args.output).write_text(output, encoding="utf-8")
     return 0
 
 
