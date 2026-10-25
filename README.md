@@ -68,7 +68,7 @@ tests/                                # unittest suite for the scripts, docs and
 
 ## Previewing the result
 
-Install the **Draw.io Integration** VS Code extension (`hediet.vscode-drawio`) to open generated `.drawio` files in a visual editor.
+Install the **Draw.io Integration** VS Code extension (`hediet.vscode-drawio`) to open generated `.drawio` and `.drawio.svg` files in a visual editor. On GitHub/GitLab, `.drawio.svg` files display as images and can be opened for editing at [app.diagrams.net](https://app.diagrams.net).
 
 ## Contributing
 
@@ -83,10 +83,10 @@ claude plugin validate --strict .                                       # plugin
 claude plugin eval skills/drawio-charts --allow-tools Write,Edit,Bash --scaffold   # optional: billed model runs
 ```
 
-New behaviour in the scripts starts with a failing test in `tests/`. New examples are picked up automatically by the test that validates every file in `assets/examples/`. `.github/workflows/validate.yml` runs the unit tests, the validator on the examples, and `claude plugin validate --strict`.
+New behaviour in the scripts starts with a failing test in `tests/`. New examples are picked up automatically: every `.drawio` file in `assets/examples/` must pass the validator, and every Mermaid pair in `assets/examples/mermaid/` (`name.mmd` plus `name.json`) must convert to a valid diagram that keeps the Mermaid's ids. `.github/workflows/validate.yml` runs the unit tests, the validator on the examples, and `claude plugin validate --strict`.
 
 ## License
 
 [MIT](LICENSE).
 
-The files in `skills/drawio-charts/references/` summarise the [mxGraph](https://github.com/jgraph/mxgraph) API documentation, which is licensed under [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0). Copyright the respective mxGraph / JGraph authors. This project is not affiliated with or endorsed by draw.io or JGraph.
+`format-reference.md` and `style-reference.md` in `skills/drawio-charts/references/` summarise the [mxGraph](https://github.com/jgraph/mxgraph) API documentation, which is licensed under [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0). Copyright the respective mxGraph / JGraph authors. This project is not affiliated with or endorsed by draw.io, JGraph or the [Mermaid](https://mermaid.js.org) project.

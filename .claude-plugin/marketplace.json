@@ -9,8 +9,8 @@
     {
       "name": "drawio-charts",
       "displayName": "draw.io Charts",
-      "description": "Create and edit draw.io (diagrams.net) .drawio XML diagrams — flowcharts, architecture diagrams, network diagrams, ER diagrams, and more.",
-      "version": "1.0.0",
+      "description": "Create and edit draw.io (diagrams.net) .drawio XML diagrams — flowcharts, architecture diagrams, network diagrams, ER diagrams, and more — and convert Mermaid diagrams into editable draw.io, including replacing Mermaid blocks in Markdown docs with .drawio.svg images.",
+      "version": "1.1.0",
       "author": {
         "name": "Raul Kivi",
         "url": "https://github.com/raulkivi"
