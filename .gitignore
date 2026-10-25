@@ -3,3 +3,6 @@
 
 # Python bytecode from running the scripts/tests
 __pycache__/
+
+# Local reports written by `claude plugin eval`
+skills/drawio-charts/evals/results/
