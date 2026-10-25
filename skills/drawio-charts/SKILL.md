@@ -16,7 +16,13 @@ Generate and edit `.drawio` files directly as XML — no draw.io application is 
 5. Run `python3 scripts/validate_drawio.py <file>` (path relative to this skill's directory) and fix every issue it reports. It checks ids, parents, edge endpoints, geometry and style separators, which are the mistakes that make draw.io drop cells or refuse to open the file. Then read through the Validation checklist for what a script can't judge.
 6. Mention that the user can open the file in draw.io or the `hediet.vscode-drawio` VS Code extension to see it. Don't depend on that to verify correctness.
 
-When **editing** an existing file, first check whether its `<diagram>` elements contain an `<mxGraphModel>` or just a block of base64-looking text. If it's the text, the page is compressed: run `python3 scripts/decompress_drawio.py <file> --in-place` to turn it into plain XML you can edit (draw.io opens both forms).
+### Editing an existing file
+
+1. Check whether each `<diagram>` holds an `<mxGraphModel>` or a block of base64-looking text. Text means the page is compressed. Run `python3 scripts/decompress_drawio.py <file> --in-place`, which decodes every compressed page and keeps the others as they are. Use the script rather than decoding by hand: draw.io's encoding is deflate plus URL-encoding, so a hand decode is easy to get subtly wrong. draw.io opens the plain form just as well.
+2. A file can have several pages. Apply the change to each page it concerns ("on both pages", or a component that appears on several), and leave the other pages alone.
+3. Keep existing ids, labels and styles. Move existing shapes only to make room, and say which ones you moved.
+4. "Put X between A and B" means reroute: replace the A→B edge with A→X and X→B, unless the user says A should still reach B directly. If X belongs in a container that A and B are in, give it that container's id as `parent` and container-relative coordinates.
+5. Validate the edited file, as for a new one.
 
 ## Minimal file skeleton
 

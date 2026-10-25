@@ -19,6 +19,21 @@ class DecompressTest(unittest.TestCase):
         self.assertEqual(diagram.get("name"), "P")
         self.assertEqual(validate_string(plain), [])
 
+    def test_every_compressed_page_is_decoded_and_plain_pages_are_kept(self):
+        packed = (
+            "<mxfile>"
+            f'<diagram id="p1" name="Overview">{compress(graph_model(vertex("a")))}</diagram>'
+            f'<diagram id="p2" name="Plain">{graph_model(vertex("b"))}</diagram>'
+            f'<diagram id="p3" name="Deployment">{compress(graph_model(vertex("c")))}</diagram>'
+            "</mxfile>"
+        )
+        root = ET.fromstring(decompress_drawio.decompress_string(packed))
+        pages = root.findall("diagram")
+        self.assertEqual([p.get("name") for p in pages], ["Overview", "Plain", "Deployment"])
+        for page, cell_id in zip(pages, "abc"):
+            self.assertEqual((page.text or "").strip(), "")
+            self.assertIsNotNone(page.find(f"mxGraphModel/root/mxCell[@id='{cell_id}']"))
+
     def test_plain_file_is_left_equivalent(self):
         plain = drawio(vertex("a"))
         result = decompress_drawio.decompress_string(plain)
