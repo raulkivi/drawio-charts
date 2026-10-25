@@ -1,8 +1,39 @@
 # Scratch diagrams generated while using the skill in this repo (not part of the skill package)
 /diagrams/
 
-# Python bytecode from running the scripts/tests
-__pycache__/
-
 # Local reports written by `claude plugin eval`
 skills/drawio-charts/evals/results/
+
+# Python bytecode and tool caches from running the scripts/tests
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Claude Code per-user settings (shared .claude/skills stays tracked)
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Playwright MCP screenshots, page snapshots and console logs
+.playwright-mcp/
+
+# Editor and OS files (.vscode holds per-user settings such as the Snyk org)
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# draw.io desktop backup and lock files
+*.bkp
+*.dtmp
+.$*.drawio
