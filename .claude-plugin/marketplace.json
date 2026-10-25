@@ -1,6 +1,6 @@
 {
   "name": "drawio-charts",
-  "description": "draw.io (diagrams.net) diagram generation for Claude Code.",
+  "description": "draw.io (diagrams.net) diagram generation and Mermaid-to-draw.io conversion for Claude Code.",
   "owner": {
     "name": "Raul Kivi",
     "url": "https://github.com/raulkivi"

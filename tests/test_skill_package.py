@@ -42,16 +42,16 @@ class ManifestTest(unittest.TestCase):
     def manifests(self):
         root = SKILL_DIR.parent.parent / ".claude-plugin"
         plugin = json.loads((root / "plugin.json").read_text(encoding="utf-8"))
-        listing = json.loads((root / "marketplace.json").read_text(encoding="utf-8"))["plugins"][0]
-        return plugin, listing
+        marketplace = json.loads((root / "marketplace.json").read_text(encoding="utf-8"))
+        return plugin, marketplace["plugins"][0], marketplace
 
     def test_versions_agree(self):
-        plugin, listing = self.manifests()
+        plugin, listing, _ = self.manifests()
         self.assertEqual(plugin["version"], listing["version"])
 
     def test_descriptions_and_keywords_cover_mermaid_conversion(self):
-        plugin, listing = self.manifests()
-        for description in (plugin["description"], listing["description"]):
+        plugin, listing, marketplace = self.manifests()
+        for description in (plugin["description"], listing["description"], marketplace["description"]):
             self.assertIn("mermaid", description.lower())
         self.assertIn("mermaid", plugin["keywords"])
 
