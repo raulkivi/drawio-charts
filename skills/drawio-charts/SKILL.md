@@ -11,12 +11,12 @@ Generate and edit `.drawio` files directly as XML — no draw.io application is 
 
 1. Work out the diagram type and the entities and relationships to show. Ask only if the content is unclear; infer the type from the request.
 2. Open the matching example from the table under "Diagram types" and copy its patterns. Each one encodes the shapes, styles and nesting that type needs.
-3. Work out rows, columns and coordinates before writing any cells (see "Layout"), then write the XML from the skeleton below: one `mxCell` per shape and one per connector.
+3. For a flowchart, state, class, ER or sequence diagram, write a graph spec and let `layout_drawio.py` place it (see "Layout"). Otherwise work out rows, columns and coordinates before writing any cells, then write the XML from the skeleton below: one `mxCell` per shape and one per connector.
 4. Style consistently: the same kind of element gets the same shape and palette entry.
 5. Run `python3 <skill-dir>/scripts/validate_drawio.py <file>` and fix every issue it reports. It checks ids, parents, edge endpoints, geometry and style separators, which are the mistakes that make draw.io drop cells or refuse to open the file. Then read through the Validation checklist for what a script can't judge.
 6. Mention that the user can open the file in draw.io or the `hediet.vscode-drawio` VS Code extension to see it. Don't depend on that to verify correctness.
 
-**Running the scripts.** `<skill-dir>` is the directory this SKILL.md is in. Run the scripts from the user's working directory, giving the script's full path and the diagram's usual path. Don't `cd` into the skill directory: the shell's working directory carries over to later commands, so relative paths then point at the wrong place, and in a sandboxed session only the original working directory may be writable.
+**Running the scripts.** `<skill-dir>` is the directory this SKILL.md is in. Run the scripts from the user's working directory, giving the script's full path and the diagram's usual path. Don't `cd` into the skill directory: the shell's working directory carries over to later commands, so the user's relative paths would then point at the wrong place.
 
 ### Editing an existing file
 
@@ -143,7 +143,9 @@ See `assets/examples/company-network.drawio` for a complete worked example (inte
 
 ## Layout
 
-There's no auto-layout when you write XML, so place every shape deliberately. Overlapping shapes and edges cutting through boxes are the most common reasons a generated diagram looks broken.
+Overlapping shapes and edges cutting through boxes are the most common reasons a generated diagram looks broken.
+
+For a flowchart, state, class, ER or sequence diagram, prefer writing a graph spec and running `layout_drawio.py` (see "Converting Mermaid diagrams"; the spec works the same without any Mermaid). It places shapes, avoids overlaps and routes edges for you. Place shapes by hand when the layout script doesn't fit: image/stencil diagrams such as network maps, org charts with photos, or a layout the user dictates. Then:
 
 - Pick one direction of flow (top-to-bottom for processes and hierarchies, left-to-right for pipelines and request paths) and keep to it.
 - Put shapes in rows and columns on the 10px grid. Use consistent sizes (e.g. 120x60 or 160x60 boxes), with at least 40px between shapes and 80–140px between levels.
@@ -191,8 +193,8 @@ Before treating a diagram as finished, confirm:
 
 - `scripts/validate_drawio.py` — structural validator: `python3 <skill-dir>/scripts/validate_drawio.py FILE...`. Exits 1 and prints one line per issue. Standard library only
 - `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 <skill-dir>/scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
-- `scripts/drawio_io.py` — shared file-reading helpers used by both scripts
-- `scripts/layout_drawio.py` — lays out a graph spec (JSON written from a Mermaid diagram) and writes a `.drawio` file: `python3 <skill-dir>/scripts/layout_drawio.py SPEC.json -o OUT.drawio`. Its helpers: `scripts/graph_spec.py` (spec parsing and checks), `scripts/layered_layout.py` (layered graph layout), `scripts/graph_render.py` (flowchart, state, class and ER diagrams), `scripts/sequence_render.py` (sequence diagrams), `scripts/drawio_writer.py` (XML output) and `scripts/text_metrics.py` (label sizing)
+- `scripts/drawio_io.py` — shared file-reading helpers (pages, compressed diagrams, cells, `.drawio.svg`) used by the other scripts
+- `scripts/layout_drawio.py` — lays out a graph spec (JSON written from a Mermaid diagram) and writes a `.drawio` file, or an editable `.drawio.svg` when the output name ends in `.svg`: `python3 <skill-dir>/scripts/layout_drawio.py SPEC.json -o OUT.drawio`. Its helpers: `scripts/graph_spec.py` (spec parsing and checks), `scripts/layered_layout.py` (layered graph layout), `scripts/graph_render.py` (flowchart, state, class and ER diagrams), `scripts/sequence_render.py` (sequence diagrams), `scripts/drawio_writer.py` (XML output) and `scripts/text_metrics.py` (label sizing)
 - `scripts/edge_router.py` — orthogonal edge routes shared by the layout and the renderer, including detours around nodes
 - `scripts/render_drawio_svg.py` — renders a `.drawio` file as an editable `.drawio.svg` (an SVG image that carries the diagram, so GitHub/GitLab show it and draw.io opens it), without the draw.io app: `python3 <skill-dir>/scripts/render_drawio_svg.py IN.drawio -o OUT.drawio.svg`
 - `scripts/replace_mermaid.py` — finds ```` ```mermaid ```` blocks in Markdown and swaps them for draw.io images, keeping the Mermaid in a comment: `list PATH... --json` (plan), `apply PLAN.json`, `restore FILE...` (undo)

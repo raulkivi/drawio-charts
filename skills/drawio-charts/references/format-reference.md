@@ -170,7 +170,7 @@ draw.io may save a page as text instead of an `<mxGraphModel>` child:
 That text is `base64(raw-deflate(encodeURIComponent(xml)))`. It can't be edited directly. Convert it to plain XML first; draw.io opens either form:
 
 ```bash
-python3 scripts/decompress_drawio.py diagram.drawio --in-place
+python3 <skill-dir>/scripts/decompress_drawio.py diagram.drawio --in-place
 ```
 
 ## Resources

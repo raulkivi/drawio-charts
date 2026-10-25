@@ -38,6 +38,24 @@ class FrontmatterTest(unittest.TestCase):
         self.assertLess(len(SKILL_MD.read_text(encoding="utf-8").splitlines()), 500)
 
 
+class ManifestTest(unittest.TestCase):
+    def manifests(self):
+        root = SKILL_DIR.parent.parent / ".claude-plugin"
+        plugin = json.loads((root / "plugin.json").read_text(encoding="utf-8"))
+        listing = json.loads((root / "marketplace.json").read_text(encoding="utf-8"))["plugins"][0]
+        return plugin, listing
+
+    def test_versions_agree(self):
+        plugin, listing = self.manifests()
+        self.assertEqual(plugin["version"], listing["version"])
+
+    def test_descriptions_and_keywords_cover_mermaid_conversion(self):
+        plugin, listing = self.manifests()
+        for description in (plugin["description"], listing["description"]):
+            self.assertIn("mermaid", description.lower())
+        self.assertIn("mermaid", plugin["keywords"])
+
+
 class LinksTest(unittest.TestCase):
     def test_every_path_mentioned_in_skill_md_exists(self):
         text = SKILL_MD.read_text(encoding="utf-8")
@@ -68,6 +86,17 @@ class LinksTest(unittest.TestCase):
         relative = [c for c in commands if not c.startswith("python3 <skill-dir>/scripts/")]
         self.assertEqual(relative, [])
         self.assertNotIn("relative to this skill's directory", text)
+
+    def test_no_doc_runs_scripts_by_a_relative_path(self):
+        for path in [SKILL_MD, *(SKILL_DIR / "references").glob("*.md")]:
+            with self.subTest(doc=path.name):
+                self.assertNotRegex(path.read_text(encoding="utf-8"), r"python3 scripts/")
+
+    def test_layout_section_points_to_the_layout_script(self):
+        text = SKILL_MD.read_text(encoding="utf-8")
+        layout = text[text.index("## Layout"):text.index("## Conventions")]
+        self.assertIn("layout_drawio.py", layout)
+        self.assertNotIn("There's no auto-layout", layout)
 
     def test_long_references_have_a_table_of_contents(self):
         for path in (SKILL_DIR / "references").glob("*.md"):
