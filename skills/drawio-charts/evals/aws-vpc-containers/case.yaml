@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: aws-vpc-containers
+expected_outcome: |
+  aws-architecture.drawio shows a VPC container holding a public and a private subnet container, with the ALB in the public subnet, both ECS services and RDS in the private subnet, users outside the VPC, connectors for users to ALB, ALB to each service and each service to RDS, and correct nesting so it passes the validator.

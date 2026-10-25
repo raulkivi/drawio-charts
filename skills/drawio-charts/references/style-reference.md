@@ -4,6 +4,20 @@
 
 Styles in draw.io are semicolon-separated key=value pairs that control the visual appearance of cells. A style string can include named styles and/or individual property overrides.
 
+## Contents
+
+- [Style string format](#style-string-format)
+- [Shape styles](#shape-styles)
+- [Fill styles](#fill-styles)
+- [Stroke (border) styles](#stroke-border-styles)
+- [Text/label styles](#textlabel-styles)
+- [Edge (connector) styles](#edge-connector-styles)
+- [Container/group styles](#containergroup-styles)
+- [Image styles](#image-styles)
+- [Miscellaneous styles](#miscellaneous-styles)
+- [Default styles](#default-styles)
+- [Named styles](#named-styles)
+
 ## Style String Format
 
 ```
@@ -304,27 +318,17 @@ shape=rectangle;whiteSpace=wrap;html=1;
 edgeStyle=none;endArrow=classic;html=1;
 ```
 
-## Creating Custom Styles
+## Named Styles
 
-Register a named style in mxStylesheet:
+A bare word in a style string (no `=`) applies a named style from draw.io's built-in stylesheet, then the `key=value` pairs override it. Useful built-ins: `text`, `edgeLabel`, `label`, `image`, `ellipse`, `rhombus`, `triangle`, `line`, `swimlane`, `group`.
 
-```javascript
-var style = {};
-style[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_RECTANGLE;
-style[mxConstants.STYLE_OPACITY] = 50;
-style[mxConstants.STYLE_FONTCOLOR] = '#774400';
-style[mxConstants.STYLE_FILLCOLOR] = '#dae8fc';
-style[mxConstants.STYLE_STROKECOLOR] = '#6c8ebf';
-graph.getStylesheet().putCellStyle('myCustomStyle', style);
-```
-
-Use in XML:
 ```xml
-<mxCell style="myCustomStyle;fontSize=14;" .../>
+<mxCell style="text;html=1;align=left;fontSize=14;" .../>
 ```
+
+A misspelled named style is silently ignored, so prefer explicit `key=value` pairs when unsure.
 
 ## See Also
 
 - [Draw.io Format Reference](format-reference.md)
-- [mxCell API Reference](mxcell-api-reference.md)
 - [mxConstants Reference](https://jgraph.github.io/mxgraph/docs/js-api/files/util/mxConstants-js.html)

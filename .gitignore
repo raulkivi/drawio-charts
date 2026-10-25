@@ -1,2 +1,8 @@
 # Scratch diagrams generated while using the skill in this repo (not part of the skill package)
 /diagrams/
+
+# Python bytecode from running the scripts/tests
+__pycache__/
+
+# Local reports written by `claude plugin eval`
+skills/drawio-charts/evals/results/
