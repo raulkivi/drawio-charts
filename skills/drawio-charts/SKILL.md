@@ -175,6 +175,7 @@ Before treating a diagram as finished, confirm:
 - `scripts/validate_drawio.py` — structural validator: `python3 <skill-dir>/scripts/validate_drawio.py FILE...`. Exits 1 and prints one line per issue. Standard library only
 - `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 <skill-dir>/scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
 - `scripts/drawio_io.py` — shared file-reading helpers used by both scripts
+- `scripts/layout_drawio.py` — lays out a graph spec (JSON written from a Mermaid diagram) and writes a `.drawio` file: `python3 <skill-dir>/scripts/layout_drawio.py SPEC.json -o OUT.drawio`. Its helpers: `scripts/graph_spec.py` (spec parsing and checks), `scripts/layered_layout.py` (layered graph layout), `scripts/graph_render.py` (flowchart, state, class and ER diagrams), `scripts/sequence_render.py` (sequence diagrams), `scripts/drawio_writer.py` (XML output) and `scripts/text_metrics.py` (label sizing)
 - `references/format-reference.md` — XML structure in full: pages, cells, parents (layers, containers, edge labels), absolute and relative geometry, waypoints, `UserObject` custom properties, compressed pages. Read it for anything nested or unusual
 - `references/style-reference.md` — every style property (fill, stroke, text, edges, arrows including ER ends, containers, images, named styles)
 - `assets/examples/*.drawio` — one complete example per diagram type (table above)
