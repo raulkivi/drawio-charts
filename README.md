@@ -5,7 +5,9 @@
 
 A [Claude Code Agent Skill](https://code.claude.com/docs/en/skills) that teaches Claude how to generate and edit [draw.io](https://www.drawio.com/) (`diagrams.net`) diagrams — as plain XML, with no draw.io application required. Works in the Claude Code CLI and the Claude Code VS Code extension.
 
-Ask for a flowchart, system/network architecture diagram, org chart, ER diagram, or sequence diagram, and it produces a valid `.drawio` file: correct `mxfile`/`mxGraphModel`/`mxCell` structure, consistent styling, and unique, well-formed ids and connections — the kind of detail that's easy to get subtly wrong when generating this XML from scratch.
+Ask for a flowchart, system/network architecture diagram, org chart, ER diagram, or sequence diagram, and it produces a valid `.drawio` file: correct `mxfile`/`mxGraphModel`/`mxCell` structure, consistent styling, and unique, well-formed ids and connections — the kind of detail that's easy to get subtly wrong when generating this XML from scratch. A bundled validator script checks each diagram before it's handed back, and compressed `.drawio` files are decoded so they can be edited.
+
+It's for editable diagrams, not data charts (bar/line/pie plots).
 
 ```
 > create a .drawio flowchart for a password reset flow: request → email sent → link
@@ -32,14 +34,22 @@ Copy [`skills/drawio-charts/`](skills/drawio-charts/) into that project's `.clau
 ├── plugin.json                       # Plugin manifest
 └── marketplace.json                  # Marketplace listing (so `/plugin marketplace add` works)
 skills/drawio-charts/
-├── SKILL.md                          # Entry point: workflow, skeleton, style cheatsheet, conventions
-├── references/                       # Loaded on demand for full API/format detail
-│   ├── format-reference.md           # mxfile / mxGraphModel / mxCell XML structure
-│   ├── style-reference.md            # Full style property tables
-│   ├── mxcell-api-reference.md       # mxCell JS API (for scripted generation)
-│   └── mxgeometry-api-reference.md   # mxGeometry JS API: positioning, waypoints
-└── assets/examples/
-    └── company-network.drawio        # Worked example diagram
+├── SKILL.md                          # Entry point: workflow, layout rules, skeleton, styles, checklist
+├── scripts/                          # Python 3 standard library only
+│   ├── validate_drawio.py            # Structural validator (ids, parents, edges, geometry, styles)
+│   ├── decompress_drawio.py          # Compressed <diagram> pages -> plain editable XML
+│   └── drawio_io.py                  # Shared file-reading helpers
+├── references/                       # Loaded on demand
+│   ├── format-reference.md           # XML structure: pages, cells, parents, geometry, UserObject, compression
+│   └── style-reference.md            # Full style property tables
+├── assets/examples/                  # One worked example per diagram type
+│   ├── password-reset-flowchart.drawio
+│   ├── checkout-sequence.drawio
+│   ├── blog-er-diagram.drawio
+│   ├── engineering-org-chart.drawio
+│   └── company-network.drawio
+└── evals/                            # Test prompts + graders (`claude plugin eval` layout)
+tests/                                # unittest suite for the scripts, docs and examples
 .claude/skills/drawio-charts          # Symlink to skills/drawio-charts, so opening this
                                        # repo directly in Claude Code also auto-loads the skill
 ```
@@ -52,7 +62,18 @@ Install the **Draw.io Integration** VS Code extension (`hediet.vscode-drawio`) t
 
 ## Contributing
 
-Issues and PRs welcome — especially additional worked examples under `skills/drawio-charts/assets/examples/` or gaps found in the style/format references. `.github/workflows/validate.yml` runs `claude plugin validate --strict` on the plugin and marketplace manifests (run it locally with `claude plugin validate --strict .` before opening a PR), checks that `SKILL.md` has the required frontmatter, and example `.drawio` files are well-formed XML.
+Issues and PRs welcome — especially additional worked examples under `skills/drawio-charts/assets/examples/` or gaps found in the style/format references.
+
+Run the checks locally before opening a PR:
+
+```bash
+python3 -m unittest discover -s tests                                   # scripts, SKILL.md links/frontmatter, examples
+python3 skills/drawio-charts/scripts/validate_drawio.py path/to/file.drawio
+claude plugin validate --strict .                                       # plugin + marketplace manifests
+claude plugin eval skills/drawio-charts --allow-tools Write,Edit,Bash --scaffold   # optional: billed model runs
+```
+
+New behaviour in the scripts starts with a failing test in `tests/`. New examples are picked up automatically by the test that validates every file in `assets/examples/`. `.github/workflows/validate.yml` runs the unit tests, the validator on the examples, and `claude plugin validate --strict`.
 
 ## License
 

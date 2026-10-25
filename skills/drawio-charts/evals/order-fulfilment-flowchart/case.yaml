@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: order-fulfilment-flowchart
+expected_outcome: |
+  A single-page order-fulfilment.drawio flowchart with a start, a payment decision with labelled pass and fail branches, the fail branch ending in a notify-and-cancel path, the success path running pick, pack, ship, delivered, and a clean layout that passes the structural validator.

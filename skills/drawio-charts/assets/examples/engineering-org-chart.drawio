@@ -1,0 +1,75 @@
+<mxfile host="app.diagrams.net" agent="draw.io" version="21.0.0">
+  <diagram id="org-chart" name="Engineering Org Chart">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!--
+          Top-down tree: levels 140px apart, each parent centred over its children.
+          Labels are HTML (html=1), so the <b>/<br> tags are written escaped in the
+          attribute. Edges leave the bottom centre and enter the top centre
+          (exitX=0.5;exitY=1;entryX=0.5;entryY=0) for the classic org-chart elbows.
+        -->
+        <mxCell id="ceo" value="&lt;b&gt;Dana Reyes&lt;/b&gt;&lt;br&gt;Chief Executive Officer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="460" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cto" value="&lt;b&gt;Sam Okafor&lt;/b&gt;&lt;br&gt;Chief Technology Officer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="150" y="180" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cfo" value="&lt;b&gt;Lee Park&lt;/b&gt;&lt;br&gt;Chief Financial Officer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="460" y="180" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="coo" value="&lt;b&gt;Alex Novak&lt;/b&gt;&lt;br&gt;Chief Operating Officer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="740" y="180" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <!--
+          A container groups a department. Its children use parent="engineering"
+          and x/y relative to the container's top-left (26px header = startSize).
+          Absolute centres: 40+20+80 = 140 and 40+200+80 = 320, so the CTO sits at centre 230.
+        -->
+        <mxCell id="engineering" value="Engineering" style="swimlane;startSize=26;container=1;collapsible=0;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="290" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="em-platform" value="&lt;b&gt;Jo Tanaka&lt;/b&gt;&lt;br&gt;Eng Manager, Platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="engineering" vertex="1">
+          <mxGeometry x="20" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="em-product" value="&lt;b&gt;Riya Shah&lt;/b&gt;&lt;br&gt;Eng Manager, Product" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="engineering" vertex="1">
+          <mxGeometry x="200" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="finance-lead" value="&lt;b&gt;Mo Haddad&lt;/b&gt;&lt;br&gt;Finance Lead" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="460" y="330" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="support-lead" value="&lt;b&gt;Kim Laurent&lt;/b&gt;&lt;br&gt;Customer Support Lead" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="740" y="330" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Reporting lines. Edges into the container still use parent="1". -->
+        <mxCell id="e-ceo-cto" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="ceo" target="cto" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-ceo-cfo" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="ceo" target="cfo" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-ceo-coo" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="ceo" target="coo" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-cto-platform" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="cto" target="em-platform" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-cto-product" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="cto" target="em-product" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-cfo-finance" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="cfo" target="finance-lead" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-coo-support" style="edgeStyle=orthogonalEdgeStyle;endArrow=none;html=1;strokeColor=#666666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="coo" target="support-lead" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

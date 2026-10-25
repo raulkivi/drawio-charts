@@ -1,2 +1,5 @@
 # Scratch diagrams generated while using the skill in this repo (not part of the skill package)
 /diagrams/
+
+# Python bytecode from running the scripts/tests
+__pycache__/

@@ -1,6 +1,6 @@
 ---
 name: drawio-charts
-description: Create, edit, and validate draw.io (diagrams.net) .drawio XML diagrams — flowcharts, system/network architecture diagrams, org charts, sequence diagrams, ER diagrams. Use whenever the user asks to create or modify a draw.io diagram, chart, or .drawio file, or wants to visualize an architecture, process, or network as a diagram.
+description: Create, edit, and validate draw.io (diagrams.net) .drawio XML diagrams — flowcharts, system/network/cloud architecture diagrams, org charts, sequence diagrams, ER/database schema diagrams. Use whenever the user asks to create or modify a draw.io or diagrams.net file, a .drawio/.dio file, or wants an architecture, process, workflow, network, schema or hierarchy drawn as an editable diagram, even if they don't say "draw.io". Not for data charts (bar, line, pie, scatter plots of numbers) or Mermaid/PlantUML text diagrams unless the user wants them as a .drawio file.
 ---
 
 # draw.io Chart Creation
@@ -9,17 +9,19 @@ Generate and edit `.drawio` files directly as XML — no draw.io application is 
 
 ## Workflow
 
-1. Clarify the diagram type and content (flowchart, architecture, network, org chart, ER, sequence) and the entities/relationships to represent.
-2. Pick a file path ending in `.drawio` (see Conventions below).
-3. Write the XML starting from the skeleton below, adding one `mxCell` per shape and one per connector.
-4. Apply styling from the cheatsheet — stay consistent (same shape type / palette entry for same kind of element).
-5. Run through the Validation checklist before considering the diagram done.
-6. If the user has the `hediet.vscode-drawio` VS Code extension, mention they can open the file to visually confirm it — but don't depend on it to verify correctness.
+1. Work out the diagram type and the entities and relationships to show. Ask only if the content is unclear; infer the type from the request.
+2. Open the matching example from the table under "Diagram types" and copy its patterns. Each one encodes the shapes, styles and nesting that type needs.
+3. Work out rows, columns and coordinates before writing any cells (see "Layout"), then write the XML from the skeleton below: one `mxCell` per shape and one per connector.
+4. Style consistently: the same kind of element gets the same shape and palette entry.
+5. Run `python3 scripts/validate_drawio.py <file>` (path relative to this skill's directory) and fix every issue it reports. It checks ids, parents, edge endpoints, geometry and style separators, which are the mistakes that make draw.io drop cells or refuse to open the file. Then read through the Validation checklist for what a script can't judge.
+6. Mention that the user can open the file in draw.io or the `hediet.vscode-drawio` VS Code extension to see it. Don't depend on that to verify correctness.
+
+When **editing** an existing file, first check whether its `<diagram>` elements contain an `<mxGraphModel>` or just a block of base64-looking text. If it's the text, the page is compressed: run `python3 scripts/decompress_drawio.py <file> --in-place` to turn it into plain XML you can edit (draw.io opens both forms).
 
 ## Minimal file skeleton
 
 ```xml
-<mxfile host="app.diagrams.net" modified="2026-01-01T00:00:00.000Z" agent="draw.io" version="21.0.0">
+<mxfile host="app.diagrams.net" agent="draw.io" version="21.0.0">
   <diagram id="unique-diagram-id" name="Diagram Name">
     <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850">
       <root>
@@ -52,9 +54,9 @@ A file can contain multiple `<diagram>` elements for a multi-page document; each
 </mxCell>
 ```
 
-Required attributes: every cell needs a unique `id` and `parent="1"` (the default layer). Shapes need `vertex="1"` plus an `mxGeometry` with `x`/`y`/`width`/`height`. Connectors need `edge="1"` plus `source`/`target` ids that match existing vertex ids, and a `relative="1"` geometry (add waypoints via a nested `<Array as="points"><mxPoint .../></Array>` if needed — see `references/mxgeometry-api-reference.md`).
+Required attributes: every cell needs a unique `id` and a `parent` that exists. Shapes need `vertex="1"` plus an `mxGeometry` with `x`/`y`/`width`/`height`. Connectors need `edge="1"`, `source`/`target` ids of existing cells, and a `relative="1"` geometry (add waypoints via a nested `<Array as="points"><mxPoint .../></Array>` if needed).
 
-To equally space `n` items of `item_width` across a container of `container_width`: gap = `(container_width - n * item_width) / (n + 1)`.
+**Parents.** Top-level cells use `parent="1"` (the default layer). Cells inside a container, swimlane, group or ER table use the container's id as `parent`, and their `x`/`y` are relative to the container's top-left corner, not the page. A label floating on a connector is a vertex whose `parent` is the edge. `references/format-reference.md` covers layers, containers, edge labels, relative geometry and custom properties.
 
 ## Style cheatsheet
 
@@ -103,6 +105,29 @@ image;aspect=fixed;perimeter=ellipsePerimeter;html=1;align=center;image=img/lib/
 
 See `assets/examples/company-network.drawio` for a complete worked example (internet → router → switch → domain controller / file server / 5 workstations) using this pattern.
 
+## Diagram types
+
+| Type | Example to copy | Key patterns |
+|---|---|---|
+| Flowchart / process | `assets/examples/password-reset-flowchart.drawio` | `ellipse` start/end, `rhombus` decisions, Yes/No edge labels, waypoint for a loop-back |
+| Sequence | `assets/examples/checkout-sequence.drawio` | `shape=umlLifeline` containers, activation bars as their children, messages placed with `exitDy`/`entryDy`, dashed replies |
+| ER / database schema | `assets/examples/blog-er-diagram.drawio` | swimlane tables with one `text` row per column, edges from FK row to PK row, `ERmandOne` / `ERzeroToMany` ends |
+| Org chart / hierarchy | `assets/examples/engineering-org-chart.drawio` | top-down tree, HTML labels (name + title), `exitX=0.5;exitY=1;entryX=0.5;entryY=0` elbows, a department container |
+| Network / infrastructure | `assets/examples/company-network.drawio` | `image=img/lib/...` stencil shapes with labels below |
+| Cloud / system architecture | `company-network` for stencils, `engineering-org-chart` for containers | Group services in containers (VPC, subnet, cluster) |
+
+## Layout
+
+There's no auto-layout when you write XML, so place every shape deliberately. Overlapping shapes and edges cutting through boxes are the most common reasons a generated diagram looks broken.
+
+- Pick one direction of flow (top-to-bottom for processes and hierarchies, left-to-right for pipelines and request paths) and keep to it.
+- Put shapes in rows and columns on the 10px grid. Use consistent sizes (e.g. 120x60 or 160x60 boxes), with at least 40px between shapes and 80–140px between levels.
+- Centre a parent over its children: parent centre x = midpoint of the first and last child centres. To space `n` items of width `w` evenly across a width `W`, the gap is `(W - n*w) / (n + 1)`.
+- Size containers to fit their children with 20px padding, plus the header height (`startSize`) at the top.
+- Put side branches (error paths, "No" outcomes) in their own column. Route edges that would cross the main path with waypoints.
+- Keep labels short. Set the box width rather than relying on wrapping to fit long text; about 7px per character at fontSize 12.
+- For more than about 25 shapes, split into pages (one `<diagram>` each) or group into containers.
+
 ## Conventions
 
 - File extension: `.drawio` (plain XML). `.drawio.svg` / `.drawio.png` embed the same XML for doc-embeddable, previewable diagrams; use those only if the user needs the diagram inline in a README or doc.
@@ -118,31 +143,33 @@ Labels and attribute values are XML. Escape `&` as `&amp;`, `<` as `&lt;`, `>` a
 
 Before treating a diagram as finished, confirm:
 
-- [ ] XML is well-formed (every tag closed, attributes quoted)
-- [ ] Every `mxCell` id is unique within the file
-- [ ] Every shape has `vertex="1"`; every connector has `edge="1"`
-- [ ] Every connector's `source`/`target` matches an existing vertex `id`
-- [ ] `parent="1"` on all diagram-level cells (`"0"`/`"1"` are the reserved root/layer ids)
-- [ ] Style strings use `;` between properties (a missing `;` silently drops the next property)
+- [ ] `scripts/validate_drawio.py` reports OK. It checks well-formed XML, unique ids, the root and layer cells, that every `parent` and every edge `source`/`target` exists (a connector may also end on another connector, never on `"0"` or a layer), vertex/edge flags, geometry, and missing `;` in styles
+- [ ] Nested cells use their container's id as `parent` and container-relative coordinates
+- [ ] No shapes overlap unintentionally, and children sit inside their container's bounds
+- [ ] Labels fit their shapes. Text from the user is escaped (see above)
+- [ ] The same kind of element looks the same everywhere (shape, colour, size)
 
 ## Troubleshooting
 
 | Symptom | Likely cause |
 |---|---|
 | File won't open | Malformed XML — check unclosed tags/quotes |
-| Shape not visible | Missing `vertex="1"` |
-| Connector not attached | `source`/`target` id doesn't match an existing vertex |
+| Shape not visible | Missing `vertex="1"`, or a `parent` id that doesn't exist |
+| Shape appears far from its container | Child `x`/`y` written in page coordinates instead of relative to the container |
+| Connector not attached | `source`/`target` id doesn't match an existing cell |
+| `<diagram>` holds unreadable text | Compressed page: run `scripts/decompress_drawio.py` |
 | Style not applied | Missing `;` separator between style properties |
 | Text not wrapping | Add `whiteSpace=wrap;html=1;` to the style |
 | Image shape missing | Check exact library path/filename (case-sensitive) |
 
-## Reference material
+## Bundled resources
 
-- `references/format-reference.md` — full `mxfile`/`mxGraphModel`/`mxCell` XML structure, file extensions, special cell ids
-- `references/style-reference.md` — complete style property tables (fill, stroke, text, edges, containers, images, arrow types, edge routing)
-- `references/mxcell-api-reference.md` — `mxCell` JS API, for anyone scripting diagram generation against the mxGraph library itself
-- `references/mxgeometry-api-reference.md` — `mxGeometry` JS API: absolute/relative positioning, edge waypoints, label offsets
-- `assets/examples/company-network.drawio` — complete worked example diagram
+- `scripts/validate_drawio.py` — structural validator: `python3 scripts/validate_drawio.py FILE...`. Exits 1 and prints one line per issue. Standard library only
+- `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
+- `scripts/drawio_io.py` — shared file-reading helpers used by both scripts
+- `references/format-reference.md` — XML structure in full: pages, cells, parents (layers, containers, edge labels), absolute and relative geometry, waypoints, `UserObject` custom properties, compressed pages. Read it for anything nested or unusual
+- `references/style-reference.md` — every style property (fill, stroke, text, edges, arrows including ER ends, containers, images, named styles)
+- `assets/examples/*.drawio` — one complete example per diagram type (table above)
 
 ## Editor preview (optional)
 

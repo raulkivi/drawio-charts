@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: edit-compressed-architecture
+expected_outcome: |
+  architecture.drawio still contains the original Web Client, Orders API and PostgreSQL cells with their ids, labels and styles, plus a new Redis cell connected to the Orders API, and the file passes the validator. The compressed page has been turned into readable XML (or re-encoded correctly).
+context:
+  scaffold_script: place-files.sh

@@ -28,32 +28,11 @@ jobs:
           python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
           python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))"
 
-      - name: Validate SKILL.md frontmatter
-        run: |
-          python3 - <<'EOF'
-          import pathlib, sys
+      - name: Unit tests (validator, decompressor, skill docs and examples)
+        run: python3 -m unittest discover -s tests -v
 
-          skill = pathlib.Path("skills/drawio-charts/SKILL.md").read_text()
-          assert skill.startswith("---\n"), "SKILL.md must start with YAML frontmatter"
-          end = skill.index("\n---", 4)
-          frontmatter = skill[4:end]
-          assert "name:" in frontmatter, "SKILL.md frontmatter missing 'name'"
-          assert "description:" in frontmatter, "SKILL.md frontmatter missing 'description'"
-          print("SKILL.md frontmatter OK")
-          EOF
-
-      - name: Validate .drawio example XML
-        run: |
-          python3 - <<'EOF'
-          import glob
-          import xml.dom.minidom as minidom
-
-          files = glob.glob("skills/drawio-charts/**/*.drawio", recursive=True)
-          assert files, "no .drawio example files found"
-          for f in files:
-              minidom.parse(f)
-              print(f"{f}: well-formed XML")
-          EOF
+      - name: Validate example diagrams
+        run: python3 skills/drawio-charts/scripts/validate_drawio.py skills/drawio-charts/assets/examples/*.drawio
 
       - name: Check skill/plugin symlink is intact
         run: |
