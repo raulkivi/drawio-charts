@@ -248,9 +248,6 @@ class CommandLineTest(unittest.TestCase):
             self.assertIn('"a"', err.getvalue())
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class EdgeSeparationTest(unittest.TestCase):
     def test_edges_between_the_same_pair_leave_and_enter_at_different_points(self):
@@ -274,3 +271,7 @@ class EdgeSeparationTest(unittest.TestCase):
         cells_ = by_id(xml)
         edge = next(c for c in cells_.values() if c.is_edge and c.get("source") == "smoke" and c.get("target") == "rollback")
         self.assertIsNotNone(edge.geometry().find("Array"))
+
+
+if __name__ == "__main__":
+    unittest.main()

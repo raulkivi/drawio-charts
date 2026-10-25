@@ -147,9 +147,6 @@ class CommandLineTest(unittest.TestCase):
             self.assertEqual(validate_file(out), [])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class RouteSpacingTest(unittest.TestCase):
     def absolute_box(self, cells_, cell_id):
@@ -213,3 +210,7 @@ class CurvedSideTest(unittest.TestCase):
         root = svg_root(render_svg(xml))
         starts = [render_drawio_svg.path_points(p.get("d"))[0] for p in root.iter(f"{SVG}path") if p.get("data-edge")]
         self.assertEqual(starts, [(160.0, 80.0), (160.0, 80.0)])
+
+
+if __name__ == "__main__":
+    unittest.main()
