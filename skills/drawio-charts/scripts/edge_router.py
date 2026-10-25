@@ -14,6 +14,7 @@ from dataclasses import dataclass
 Point = tuple[float, float]
 GRID = 10
 CLEARANCE = 10
+SNAP = 4   # ends this close to aligned are drawn straight
 TURN_COST = 6
 MAX_CELLS = 250_000
 
@@ -59,6 +60,10 @@ def orthogonalise(points: list[Point], start_side: str | None, end_side: str | N
     for i, q in enumerate(points[1:], start=1):
         p = result[-1]
         last = i == len(points) - 1
+        if last and end_side in ("top", "bottom") and abs(p[0] - q[0]) <= SNAP:
+            q = (p[0], q[1])   # slide the end along its side rather than draw a tiny jog
+        elif last and end_side in ("left", "right") and abs(p[1] - q[1]) <= SNAP:
+            q = (q[0], p[1])
         if abs(p[0] - q[0]) < 0.01 or abs(p[1] - q[1]) < 0.01:
             result.append(q)
             vertical = abs(p[0] - q[0]) < 0.01

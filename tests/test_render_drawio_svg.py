@@ -201,3 +201,15 @@ class RouteSpacingTest(unittest.TestCase):
         ends = [render_drawio_svg.path_points(p.get("d"))[-1] for p in root.iter(f"{SVG}path") if p.get("data-edge")]
         self.assertEqual(len(ends), 2)
         self.assertNotEqual(ends[0], ends[1])
+
+
+class CurvedSideTest(unittest.TestCase):
+    def test_edges_leaving_a_rhombus_start_at_its_tip(self):
+        xml = drawio(vertex("d", style="rhombus;", geometry='<mxGeometry x="100" y="0" width="120" height="80" as="geometry"/>')
+                     + vertex("a", geometry='<mxGeometry x="0" y="200" width="100" height="40" as="geometry"/>')
+                     + vertex("b", geometry='<mxGeometry x="220" y="200" width="100" height="40" as="geometry"/>')
+                     + edge("e1", "d", "a", style="edgeStyle=orthogonalEdgeStyle;")
+                     + edge("e2", "d", "b", style="edgeStyle=orthogonalEdgeStyle;"))
+        root = svg_root(render_svg(xml))
+        starts = [render_drawio_svg.path_points(p.get("d"))[0] for p in root.iter(f"{SVG}path") if p.get("data-edge")]
+        self.assertEqual(starts, [(160.0, 80.0), (160.0, 80.0)])

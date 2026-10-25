@@ -43,3 +43,10 @@ class EdgeRouterTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NearlyAlignedTest(unittest.TestCase):
+    def test_nearly_aligned_ends_give_a_straight_line(self):
+        points = default_route(Rect(0, 0, 100, 40), Rect(2, 100, 100, 40))
+        self.assertEqual(len(points), 2)
+        self.assertEqual(points[0][0], points[1][0])

@@ -299,8 +299,8 @@ class _Renderer:
                     ("start", cell.get("source"), route[0], route[1], "exitX" in style),
                     ("end", cell.get("target"), route[-1], route[-2], "entryX" in style)):
                 box_cell = self.by_id.get(cell_id)
-                if box_cell is None or constrained:
-                    continue
+                if box_cell is None or constrained or _curved(box_cell):
+                    continue  # curved shapes keep the tip/centre: their sides aren't flat
                 box = self.box(box_cell)
                 side = _side_of(box, point)
                 along = neighbour[0] if side in ("top", "bottom") else neighbour[1]
@@ -346,6 +346,12 @@ MARKERS: dict[str, tuple[str, list[tuple[str, dict[str, str]]]]] = {
     "ERzeroToMany": ("12", [("path", {"d": "M7,6 L12,6 M7,6 L12,1 M7,6 L12,11", "fill": "none"}),
                             ("circle", {"cx": "3.5", "cy": "6", "r": "3", "fill": "#ffffff"})]),
 }
+
+
+def _curved(cell: Cell) -> bool:
+    style = parse_style(cell.get("style"))
+    names = set(style["_names"].split()) | {style.get("shape", "")}
+    return bool(names & {"rhombus", "ellipse", "doubleEllipse", "endState", "hexagon"})
 
 
 def _side_of(box: Box, point: Point) -> str:
