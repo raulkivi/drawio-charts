@@ -1,0 +1,105 @@
+{
+  "type": "flowchart",
+  "title": "Deploy pipeline",
+  "direction": "LR",
+  "classes": {
+    "danger": {
+      "fill": "#f8cecc",
+      "stroke": "#b85450"
+    }
+  },
+  "nodes": [
+    {
+      "id": "push",
+      "label": "Push to main",
+      "shape": "stadium"
+    },
+    {
+      "id": "build",
+      "label": "Build & unit tests"
+    },
+    {
+      "id": "ok",
+      "label": "Tests pass?",
+      "shape": "rhombus"
+    },
+    {
+      "id": "notify",
+      "label": "Notify author",
+      "shape": "parallelogram",
+      "class": "danger"
+    },
+    {
+      "id": "image",
+      "label": "Container registry",
+      "shape": "cylinder"
+    },
+    {
+      "id": "staging",
+      "label": "Deploy to staging"
+    },
+    {
+      "id": "smoke",
+      "label": "Smoke tests",
+      "shape": "hexagon"
+    },
+    {
+      "id": "prod",
+      "label": "Deploy to production"
+    },
+    {
+      "id": "rollback",
+      "label": "Roll back",
+      "class": "danger"
+    }
+  ],
+  "groups": [
+    {
+      "id": "deploy",
+      "label": "Deploy",
+      "members": [
+        "staging",
+        "smoke",
+        "prod"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "push",
+      "to": "build"
+    },
+    {
+      "from": "build",
+      "to": "ok"
+    },
+    {
+      "from": "ok",
+      "to": "notify",
+      "label": "no"
+    },
+    {
+      "from": "ok",
+      "to": "image",
+      "label": "yes"
+    },
+    {
+      "from": "staging",
+      "to": "smoke"
+    },
+    {
+      "from": "smoke",
+      "to": "prod"
+    },
+    {
+      "from": "image",
+      "to": "staging"
+    },
+    {
+      "from": "smoke",
+      "to": "rollback",
+      "label": "fail",
+      "line": "dotted"
+    }
+  ]
+}

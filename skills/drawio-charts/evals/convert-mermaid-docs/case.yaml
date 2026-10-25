@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: convert-mermaid-docs
+expected_outcome: |
+  The flowchart, sequence and ER Mermaid blocks in docs/architecture.md are replaced by image links to .drawio.svg files in docs/diagrams/, each an SVG that embeds a valid draw.io diagram faithful to its Mermaid source (same nodes, edges, labels, subgraph and cardinalities). The original Mermaid of each converted block is kept in an HTML comment. The gantt block, which has no draw.io equivalent, is left as Mermaid and the summary says so. The rest of the document is unchanged.
+context:
+  scaffold_script: place-files.sh

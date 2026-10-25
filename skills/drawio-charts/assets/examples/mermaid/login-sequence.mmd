@@ -1,0 +1,19 @@
+sequenceDiagram
+  actor U as User
+  participant W as Web app
+  participant A as Auth service
+  participant DB as User DB
+  U->>+W: Submit login form
+  W->>+A: POST /token
+  A->>DB: Find user by email
+  DB-->>A: User record
+  alt password matches
+    A-->>W: 200 access token
+    W-->>U: Redirect to dashboard
+  else wrong password
+    A-->>W: 401 Unauthorized
+    Note right of A: Count failed attempt
+    W-->>U: Show error
+  end
+  deactivate A
+  deactivate W

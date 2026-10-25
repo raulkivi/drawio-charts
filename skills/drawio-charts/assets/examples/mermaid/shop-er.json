@@ -1,0 +1,109 @@
+{
+  "type": "er",
+  "direction": "LR",
+  "nodes": [
+    {
+      "id": "CUSTOMER",
+      "shape": "entity",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "int",
+          "key": "PK"
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "key": "UK"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "ORDER",
+      "shape": "entity",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "int",
+          "key": "PK"
+        },
+        {
+          "name": "customer_id",
+          "type": "int",
+          "key": "FK"
+        },
+        {
+          "name": "placed_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "id": "LINE_ITEM",
+      "shape": "entity",
+      "attributes": [
+        {
+          "name": "order_id",
+          "type": "int",
+          "key": "PK, FK"
+        },
+        {
+          "name": "product_id",
+          "type": "int",
+          "key": "PK, FK"
+        },
+        {
+          "name": "quantity",
+          "type": "int"
+        }
+      ]
+    },
+    {
+      "id": "PRODUCT",
+      "shape": "entity",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "int",
+          "key": "PK"
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "key": "UK"
+        },
+        {
+          "name": "price",
+          "type": "decimal"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "CUSTOMER",
+      "to": "ORDER",
+      "label": "places",
+      "tail": "one",
+      "head": "zero_or_more"
+    },
+    {
+      "from": "ORDER",
+      "to": "LINE_ITEM",
+      "label": "contains",
+      "tail": "one",
+      "head": "one_or_more"
+    },
+    {
+      "from": "PRODUCT",
+      "to": "LINE_ITEM",
+      "label": "ordered in",
+      "tail": "one",
+      "head": "zero_or_more"
+    }
+  ]
+}

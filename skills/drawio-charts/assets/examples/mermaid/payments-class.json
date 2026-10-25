@@ -1,0 +1,91 @@
+{
+  "type": "class",
+  "nodes": [
+    {
+      "id": "PaymentMethod",
+      "shape": "class",
+      "stereotype": "interface",
+      "methods": [
+        "+authorize(amount) bool"
+      ]
+    },
+    {
+      "id": "Card",
+      "shape": "class",
+      "attributes": [
+        "-number: string",
+        "-expiry: date"
+      ],
+      "methods": [
+        "+authorize(amount) bool"
+      ]
+    },
+    {
+      "id": "Wallet",
+      "shape": "class",
+      "attributes": [
+        "-balance: decimal"
+      ],
+      "methods": [
+        "+authorize(amount) bool"
+      ]
+    },
+    {
+      "id": "Order",
+      "shape": "class",
+      "attributes": [
+        "+id: int"
+      ],
+      "methods": [
+        "+total() decimal"
+      ]
+    },
+    {
+      "id": "Customer",
+      "shape": "class",
+      "attributes": [
+        "+name: string"
+      ]
+    },
+    {
+      "id": "LineItem",
+      "shape": "class"
+    }
+  ],
+  "edges": [
+    {
+      "from": "PaymentMethod",
+      "to": "Card",
+      "tail": "triangle",
+      "head": "none",
+      "line": "dotted"
+    },
+    {
+      "from": "PaymentMethod",
+      "to": "Wallet",
+      "tail": "triangle",
+      "head": "none",
+      "line": "dotted"
+    },
+    {
+      "from": "Customer",
+      "to": "Order",
+      "label": "places",
+      "fromLabel": "1",
+      "toLabel": "*"
+    },
+    {
+      "from": "Order",
+      "to": "LineItem",
+      "tail": "diamond",
+      "head": "none",
+      "toLabel": "1..*"
+    },
+    {
+      "from": "Order",
+      "to": "PaymentMethod",
+      "tail": "odiamond",
+      "head": "none"
+    }
+  ]
+}
