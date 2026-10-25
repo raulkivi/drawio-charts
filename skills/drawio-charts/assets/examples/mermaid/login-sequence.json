@@ -1,0 +1,119 @@
+{
+  "type": "sequence",
+  "participants": [
+    {
+      "id": "U",
+      "label": "User",
+      "kind": "actor"
+    },
+    {
+      "id": "W",
+      "label": "Web app"
+    },
+    {
+      "id": "A",
+      "label": "Auth service"
+    },
+    {
+      "id": "DB",
+      "label": "User DB"
+    }
+  ],
+  "items": [
+    {
+      "message": {
+        "from": "U",
+        "to": "W",
+        "label": "Submit login form",
+        "activate": true
+      }
+    },
+    {
+      "message": {
+        "from": "W",
+        "to": "A",
+        "label": "POST /token",
+        "activate": true
+      }
+    },
+    {
+      "message": {
+        "from": "A",
+        "to": "DB",
+        "label": "Find user by email"
+      }
+    },
+    {
+      "message": {
+        "from": "DB",
+        "to": "A",
+        "label": "User record",
+        "line": "dotted"
+      }
+    },
+    {
+      "frame": {
+        "kind": "alt",
+        "sections": [
+          {
+            "label": "password matches",
+            "items": [
+              {
+                "message": {
+                  "from": "A",
+                  "to": "W",
+                  "label": "200 access token",
+                  "line": "dotted"
+                }
+              },
+              {
+                "message": {
+                  "from": "W",
+                  "to": "U",
+                  "label": "Redirect to dashboard",
+                  "line": "dotted"
+                }
+              }
+            ]
+          },
+          {
+            "label": "wrong password",
+            "items": [
+              {
+                "message": {
+                  "from": "A",
+                  "to": "W",
+                  "label": "401 Unauthorized",
+                  "line": "dotted"
+                }
+              },
+              {
+                "note": {
+                  "over": [
+                    "A"
+                  ],
+                  "position": "right of",
+                  "text": "Count failed attempt"
+                }
+              },
+              {
+                "message": {
+                  "from": "W",
+                  "to": "U",
+                  "label": "Show error",
+                  "line": "dotted"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "deactivate": "A"
+    },
+    {
+      "deactivate": "W"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+---
+title: Deploy pipeline
+---
+flowchart LR
+  push([Push to main]) --> build[Build & unit tests]
+  build --> ok{Tests pass?}
+  ok -->|no| notify[/Notify author/]
+  ok -->|yes| image[(Container registry)]
+  subgraph deploy [Deploy]
+    direction LR
+    staging[Deploy to staging] --> smoke{{Smoke tests}}
+    smoke --> prod[Deploy to production]
+  end
+  image --> staging
+  smoke -.->|fail| rollback[Roll back]
+  classDef danger fill:#f8cecc,stroke:#b85450
+  class notify,rollback danger

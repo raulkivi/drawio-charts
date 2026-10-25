@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from drawio_writer import DrawioBuilder, html_label, style_string
+from edge_router import Rect, default_route, route_around, route_crosses
 from graph_spec import Edge, GraphSpec, Group, Node
 from layered_layout import layered_layout
 from text_metrics import fit_box, round_up, text_width
@@ -95,6 +96,7 @@ class Plan:
 
 def render_graph(spec: GraphSpec) -> str:
     plan = plan_layout(spec)
+    extras = refine_edges(spec, plan)
     builder = DrawioBuilder()
     cell_id: dict[str, str] = {}
     groups = {g.id: g for g in _walk(spec.groups)}
@@ -112,7 +114,9 @@ def render_graph(spec: GraphSpec) -> str:
         cell_id[node.id] = builder.new_id(node.id)
         _emit_node(builder, node, cell_id[node.id], plan.nodes[node.id], parent_cell(plan.nodes[node.id].parent), spec)
     for index, edge in enumerate(spec.edges):
-        _emit_edge(builder, index, edge, cell_id, parent_cell(plan.edge_parent[index]), plan.edge_points[index])
+        style, label_position = extras[index]
+        _emit_edge(builder, index, edge, cell_id, parent_cell(plan.edge_parent[index]), plan.edge_points[index],
+                   style, label_position)
     return builder.to_xml(spec.title or "Page-1", plan.width, plan.height)
 
 
@@ -181,6 +185,102 @@ def plan_layout(spec: GraphSpec) -> Plan:
     total = lay_out(ROOT)
     plan.width, plan.height = total.width + 2 * MARGIN, total.height + 2 * MARGIN
     return plan
+
+
+def refine_edges(spec: GraphSpec, plan: Plan) -> dict[int, tuple[dict[str, object], float | None]]:
+    """Second pass over the edges once every box is placed.
+
+    Edges between the same two nodes get their own exit/entry points and
+    staggered labels, so they don't draw on top of each other. An edge whose
+    simple route would run through another node gets detour waypoints.
+    Returns extra style properties and a label position per edge index.
+    """
+    extras: dict[int, tuple[dict[str, object], float | None]] = {i: ({}, None) for i in range(len(spec.edges))}
+    groups = list(_walk(spec.groups))
+    containing = _containing_groups(spec)
+
+    pairs: dict[frozenset, list[int]] = {}
+    for index, edge in enumerate(spec.edges):
+        if edge.source != edge.target:
+            pairs.setdefault(frozenset((edge.source, edge.target)), []).append(index)
+    shared = set()
+    for indices in (i for i in pairs.values() if len(i) > 1):
+        first = spec.edges[indices[0]]
+        for k, index in enumerate(indices):
+            edge = spec.edges[index]
+            source, target = _absolute(plan, edge.source), _absolute(plan, edge.target)
+            spread = -0.4 + 0.8 * k / (len(indices) - 1)
+            backwards = (edge.source, edge.target) != (first.source, first.target)
+            extras[index] = (_facing_constraints(source, target, (k + 1) / (len(indices) + 1)),
+                             -spread if backwards else spread)
+            plan.edge_points[index] = []
+            shared.add(index)
+
+    for index, edge in enumerate(spec.edges):
+        if index in shared or edge.source == edge.target:
+            continue
+        ends = {edge.source, edge.target}
+        obstacles = [_absolute(plan, n.id) for n in spec.nodes
+                     if n.id not in ends and not (containing[n.id] & ends)]
+        obstacles += [_absolute(plan, g.id) for g in groups
+                      if g.id not in ends and not ({edge.source, edge.target} & _members_deep(g))]
+        source, target = _absolute(plan, edge.source), _absolute(plan, edge.target)
+        ox, oy = _origin(plan, plan.edge_parent[index])
+        waypoints = [(ox + x, oy + y) for x, y in plan.edge_points[index]]
+        if route_crosses(default_route(source, target, waypoints), obstacles):
+            detour = route_around(source, target, obstacles)
+            if detour:
+                plan.edge_points[index] = [(x - ox, y - oy) for x, y in detour]
+    return extras
+
+
+def _facing_constraints(source: Rect, target: Rect, slot: float) -> dict[str, object]:
+    dx, dy = target.cx - source.cx, target.cy - source.cy
+    slot = round(slot, 3)
+    if abs(dy) * source.w >= abs(dx) * source.h:
+        down = dy >= 0
+        exit_point, entry_point = (slot, 1 if down else 0), (slot, 0 if down else 1)
+    else:
+        right = dx >= 0
+        exit_point, entry_point = (1 if right else 0, slot), (0 if right else 1, slot)
+    return {"exitX": exit_point[0], "exitY": exit_point[1], "exitDx": 0, "exitDy": 0,
+            "entryX": entry_point[0], "entryY": entry_point[1], "entryDx": 0, "entryDy": 0}
+
+
+def _absolute(plan: Plan, element: str) -> Rect:
+    placed = plan.nodes.get(element) or plan.groups[element]
+    x, y = _origin(plan, placed.parent)
+    return Rect(x + placed.x, y + placed.y, placed.width, placed.height)
+
+
+def _origin(plan: Plan, group: str | None) -> tuple[float, float]:
+    if group is ROOT:
+        return 0.0, 0.0
+    box = _absolute(plan, group)
+    return box.x, box.y
+
+
+def _containing_groups(spec: GraphSpec) -> dict[str, set[str]]:
+    """Every group that holds each node, at any depth."""
+    holders: dict[str, set[str]] = {n.id: set() for n in spec.nodes}
+
+    def visit(group: Group, outer: set[str]) -> None:
+        chain = outer | {group.id}
+        for member in group.members:
+            holders[member] |= chain
+        for nested in group.groups:
+            visit(nested, chain)
+
+    for group in spec.groups:
+        visit(group, set())
+    return holders
+
+
+def _members_deep(group: Group) -> set[str]:
+    found = set(group.members)
+    for nested in group.groups:
+        found |= {nested.id} | _members_deep(nested)
+    return found
 
 
 def measure(node: Node, direction: str = "TD") -> Box:
@@ -289,10 +389,12 @@ def _edge_style(edge: Edge) -> str:
 
 
 def _emit_edge(builder: DrawioBuilder, index: int, edge: Edge, cell_id: dict[str, str], parent: str,
-               points: list[tuple[float, float]]) -> None:
+               points: list[tuple[float, float]], extra_style: dict[str, object],
+               label_position: float | None) -> None:
     edge_id = builder.new_id(f"edge-{index}")
-    builder.edge(edge_id, html_label(edge.label), _edge_style(edge), parent,
-                 source=cell_id[edge.source], target=cell_id[edge.target], points=points)
+    builder.edge(edge_id, html_label(edge.label), _edge_style(edge) + style_string(**extra_style), parent,
+                 source=cell_id[edge.source], target=cell_id[edge.target], points=points,
+                 label_position=label_position if edge.label else None)
     for text, position in ((edge.source_label, -0.8), (edge.target_label, 0.8)):
         if text:
             builder.edge_label(builder.new_id(f"{edge_id}-label"), html_label(text), edge_id, position)

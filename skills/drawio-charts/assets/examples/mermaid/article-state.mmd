@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Review : submit
+  Review --> Draft : request changes
+  Review --> Published : approve
+  state Published {
+    [*] --> Live
+    Live --> Archived : expire
+  }
+  Published --> [*]

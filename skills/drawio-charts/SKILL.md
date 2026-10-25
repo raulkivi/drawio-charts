@@ -1,6 +1,6 @@
 ---
 name: drawio-charts
-description: Create, edit, and validate draw.io (diagrams.net) .drawio XML diagrams — flowcharts, system/network/cloud architecture diagrams, org charts, sequence diagrams, ER/database schema diagrams. Use whenever the user asks to create or modify a draw.io or diagrams.net file, a .drawio/.dio file, or wants an architecture, process, workflow, network, schema or hierarchy drawn as an editable diagram, even if they don't say "draw.io". Not for data charts (bar, line, pie, scatter plots of numbers) or Mermaid/PlantUML text diagrams unless the user wants them as a .drawio file.
+description: Create, edit, and validate draw.io (diagrams.net) .drawio XML diagrams — flowcharts, system/network/cloud architecture diagrams, org charts, sequence diagrams, ER/database schema diagrams. Use whenever the user asks to create or modify a draw.io or diagrams.net file, a .drawio/.dio file, or wants an architecture, process, workflow, network, schema or hierarchy drawn as an editable diagram, even if they don't say "draw.io". Also use it to convert Mermaid diagrams (flowchart, sequence, class, state, ER) into editable draw.io diagrams, including replacing ```mermaid blocks in Markdown docs with .drawio.svg images that GitHub/GitLab display. Not for data charts (bar, line, pie, scatter plots of numbers).
 ---
 
 # draw.io Chart Creation
@@ -25,6 +25,23 @@ Generate and edit `.drawio` files directly as XML — no draw.io application is 
 3. Keep existing ids, labels and styles. Move existing shapes only to make room, and say which ones you moved.
 4. "Put X between A and B" means reroute: replace the A→B edge with A→X and X→B, unless the user says A should still reach B directly. If X belongs in a container that A and B are in, give it that container's id as `parent` and container-relative coordinates.
 5. Validate the edited file, as for a new one.
+
+## Converting Mermaid diagrams
+
+Don't place Mermaid diagrams by hand. Translate each one into a small JSON **graph spec** and let `scripts/layout_drawio.py` do the layout. The layout is deterministic, keeps shapes from overlapping and routes edges around nodes, which hand placement can't do reliably beyond a few nodes. `references/mermaid-mapping.md` is the translation guide: shapes, arrows, subgraphs, classDefs, and each diagram type's syntax. `assets/examples/mermaid/` has a Mermaid source and its spec for every supported type. Read the guide before your first conversion in a session.
+
+**One diagram:**
+1. Write the spec, following the mapping guide. Keep Mermaid's ids.
+2. Run `python3 <skill-dir>/scripts/layout_drawio.py spec.json -o out.drawio`, or `-o out.drawio.svg` for an image docs can show. Save the spec somewhere temporary; it isn't a deliverable.
+3. Check the spec against the Mermaid as described under "Checking the conversion" in the guide: every node, edge and label accounted for.
+
+**Mermaid blocks in Markdown docs** (GitHub/GitLab):
+1. Plan: `python3 <skill-dir>/scripts/replace_mermaid.py list docs/ --json > $TMPDIR/plan.json`. This lists every ```` ```mermaid ```` block with its file, line, type, a title, and an image path (`diagrams/<title>.drawio.svg` next to the Markdown file). Keep the plan out of the repository.
+2. For each entry with `"supported": true`, read the block at `file:line`, write its spec, and run `layout_drawio.py SPEC -o <folder of file>/<image>`. Create the `diagrams/` folder if needed.
+3. Apply: `python3 <skill-dir>/scripts/replace_mermaid.py apply $TMPDIR/plan.json`. Each block becomes `![title](diagrams/….drawio.svg)`, with the original Mermaid kept in an HTML comment underneath. Blocks without an image, blocks changed since the plan, and unsupported types are skipped and reported. Reruns are safe.
+4. Review the diff. Tell the user which blocks were converted, which were left as Mermaid and why, and that `replace_mermaid.py restore FILE` undoes a file's conversion.
+
+The `.drawio.svg` is drawn by `scripts/render_drawio_svg.py`, which covers only the shapes the layout produces. It looks plainer than draw.io's own rendering. draw.io and the VS Code draw.io extension open it as an editable diagram, and redraw the image when it's saved.
 
 ## Minimal file skeleton
 
@@ -138,7 +155,7 @@ There's no auto-layout when you write XML, so place every shape deliberately. Ov
 
 ## Conventions
 
-- File extension: `.drawio` (plain XML). `.drawio.svg` / `.drawio.png` embed the same XML for doc-embeddable, previewable diagrams; use those only if the user needs the diagram inline in a README or doc.
+- File extension: `.drawio` (plain XML). For a diagram shown inline in Markdown on GitHub/GitLab, which can't display `.drawio`, use `.drawio.svg`: an SVG image with the draw.io XML embedded. Write it with `layout_drawio.py -o x.drawio.svg` or `render_drawio_svg.py`. `.drawio.png` is the same idea, but needs the draw.io app to produce.
 - Filenames: descriptive and kebab/lowercase, e.g. `payment-service-architecture.drawio`, `user-onboarding-flowchart.drawio`.
 - IDs: short, descriptive, unique within the file (`router`, `ws1`, `e-switch-ws1`) rather than opaque UUIDs — makes diffs and later edits legible.
 - When editing an existing `.drawio` file, preserve unrelated cells exactly; only touch the `mxCell` elements you intend to change, and never split an element's opening/closing tags across separate edits.
@@ -176,11 +193,14 @@ Before treating a diagram as finished, confirm:
 - `scripts/decompress_drawio.py` — turns compressed pages into plain XML: `python3 <skill-dir>/scripts/decompress_drawio.py FILE --in-place` (or `-o OUT`)
 - `scripts/drawio_io.py` — shared file-reading helpers used by both scripts
 - `scripts/layout_drawio.py` — lays out a graph spec (JSON written from a Mermaid diagram) and writes a `.drawio` file: `python3 <skill-dir>/scripts/layout_drawio.py SPEC.json -o OUT.drawio`. Its helpers: `scripts/graph_spec.py` (spec parsing and checks), `scripts/layered_layout.py` (layered graph layout), `scripts/graph_render.py` (flowchart, state, class and ER diagrams), `scripts/sequence_render.py` (sequence diagrams), `scripts/drawio_writer.py` (XML output) and `scripts/text_metrics.py` (label sizing)
+- `scripts/edge_router.py` — orthogonal edge routes shared by the layout and the renderer, including detours around nodes
 - `scripts/render_drawio_svg.py` — renders a `.drawio` file as an editable `.drawio.svg` (an SVG image that carries the diagram, so GitHub/GitLab show it and draw.io opens it), without the draw.io app: `python3 <skill-dir>/scripts/render_drawio_svg.py IN.drawio -o OUT.drawio.svg`
 - `scripts/replace_mermaid.py` — finds ```` ```mermaid ```` blocks in Markdown and swaps them for draw.io images, keeping the Mermaid in a comment: `list PATH... --json` (plan), `apply PLAN.json`, `restore FILE...` (undo)
 - `references/format-reference.md` — XML structure in full: pages, cells, parents (layers, containers, edge labels), absolute and relative geometry, waypoints, `UserObject` custom properties, compressed pages. Read it for anything nested or unusual
+- `references/mermaid-mapping.md` — Mermaid → graph spec translation for flowchart, state, class, ER and sequence diagrams, and how to check a conversion
 - `references/style-reference.md` — every style property (fill, stroke, text, edges, arrows including ER ends, containers, images, named styles)
 - `assets/examples/*.drawio` — one complete example per diagram type (table above)
+- `assets/examples/mermaid/` — Mermaid source (`.mmd`) and the graph spec written from it (`.json`) for each supported Mermaid type
 
 ## Editor preview (optional)
 

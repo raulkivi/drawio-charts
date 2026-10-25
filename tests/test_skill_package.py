@@ -5,7 +5,9 @@ import unittest
 
 from helpers import EXAMPLES_DIR, SKILL_DIR
 
-from validate_drawio import validate_file
+import json
+
+from validate_drawio import validate_file, validate_string
 
 SKILL_MD = SKILL_DIR / "SKILL.md"
 
@@ -27,6 +29,11 @@ class FrontmatterTest(unittest.TestCase):
         description = frontmatter()["description"].lower()
         self.assertIn("not for data", description)
 
+    def test_description_claims_mermaid_conversion(self):
+        description = frontmatter()["description"].lower()
+        self.assertIn("mermaid", description)
+        self.assertIn("convert", description)
+
     def test_skill_md_stays_under_500_lines(self):
         self.assertLess(len(SKILL_MD.read_text(encoding="utf-8").splitlines()), 500)
 
@@ -35,6 +42,7 @@ class LinksTest(unittest.TestCase):
     def test_every_path_mentioned_in_skill_md_exists(self):
         text = SKILL_MD.read_text(encoding="utf-8")
         mentioned = set(re.findall(r"`((?:references|assets|scripts)/[^`\s]+)`", text))
+        self.assertIn("assets/examples/mermaid/", mentioned)
         self.assertTrue(mentioned)
         missing = [path for path in mentioned if not any(SKILL_DIR.glob(path))]
         self.assertEqual(missing, [])
@@ -75,6 +83,26 @@ class ExamplesTest(unittest.TestCase):
         for path in examples:
             with self.subTest(example=path.name):
                 self.assertEqual(validate_file(path), [])
+
+    def test_mermaid_examples_convert_cleanly_and_match_their_source(self):
+        from graph_spec import GraphSpec, parse_spec
+        from layout_drawio import convert
+        from replace_mermaid import diagram_type
+
+        folder = EXAMPLES_DIR / "mermaid"
+        kinds = set()
+        for spec_path in sorted(folder.glob("*.json")):
+            with self.subTest(example=spec_path.name):
+                mermaid = spec_path.with_suffix(".mmd").read_text(encoding="utf-8")
+                spec = parse_spec(json.loads(spec_path.read_text(encoding="utf-8")))
+                kinds.add(spec.type)
+                self.assertEqual(diagram_type(mermaid), spec.type)
+                self.assertEqual(validate_string(convert(spec)), [])
+                ids = [n.id for n in spec.nodes] if isinstance(spec, GraphSpec) else [p.id for p in spec.participants]
+                for node_id in ids:
+                    if not node_id.startswith("_"):   # "_start"/"_end" stand for Mermaid's [*]
+                        self.assertIn(node_id, mermaid)
+        self.assertEqual(kinds, {"flowchart", "sequence", "er", "class", "state"})
 
     def test_each_advertised_diagram_type_has_an_example(self):
         names = {p.stem for p in EXAMPLES_DIR.glob("*.drawio")}

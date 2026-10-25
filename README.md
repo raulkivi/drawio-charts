@@ -7,11 +7,15 @@ A [Claude Code Agent Skill](https://code.claude.com/docs/en/skills) that teaches
 
 Ask for a flowchart, system/network architecture diagram, org chart, ER diagram, or sequence diagram, and it produces a valid `.drawio` file: correct `mxfile`/`mxGraphModel`/`mxCell` structure, consistent styling, and unique, well-formed ids and connections — the kind of detail that's easy to get subtly wrong when generating this XML from scratch. A bundled validator script checks each diagram before it's handed back, and compressed `.drawio` files are decoded so they can be edited.
 
+It also **converts Mermaid diagrams** (flowchart, sequence, class, state, ER) into editable draw.io diagrams, and can replace the ```` ```mermaid ```` blocks in your Markdown docs with `.drawio.svg` images. Those display inline on GitHub/GitLab and open as editable diagrams in draw.io or the VS Code draw.io extension. The original Mermaid is kept in a comment, so the change can be undone. No draw.io installation is needed: the bundled scripts do the layout and draw the SVG.
+
 It's for editable diagrams, not data charts (bar/line/pie plots).
 
 ```
 > create a .drawio flowchart for a password reset flow: request → email sent → link
   clicked → new password → confirmation
+
+> convert the mermaid diagrams in docs/ to draw.io and replace them in the markdown
 ```
 
 ## Install
@@ -38,16 +42,22 @@ skills/drawio-charts/
 ├── scripts/                          # Python 3 standard library only
 │   ├── validate_drawio.py            # Structural validator (ids, parents, edges, geometry, styles)
 │   ├── decompress_drawio.py          # Compressed <diagram> pages -> plain editable XML
-│   └── drawio_io.py                  # Shared file-reading helpers
+│   ├── layout_drawio.py              # Graph spec (from Mermaid) -> laid-out .drawio / .drawio.svg
+│   ├── render_drawio_svg.py          # .drawio -> editable .drawio.svg, no draw.io app needed
+│   ├── replace_mermaid.py            # Plan / apply / restore Mermaid -> image swaps in Markdown
+│   └── graph_spec.py, layered_layout.py, graph_render.py, sequence_render.py,
+│       edge_router.py, drawio_writer.py, text_metrics.py, drawio_io.py   # their building blocks
 ├── references/                       # Loaded on demand
 │   ├── format-reference.md           # XML structure: pages, cells, parents, geometry, UserObject, compression
-│   └── style-reference.md            # Full style property tables
+│   ├── style-reference.md            # Full style property tables
+│   └── mermaid-mapping.md            # Mermaid -> graph spec translation guide
 ├── assets/examples/                  # One worked example per diagram type
 │   ├── password-reset-flowchart.drawio
 │   ├── checkout-sequence.drawio
 │   ├── blog-er-diagram.drawio
 │   ├── engineering-org-chart.drawio
-│   └── company-network.drawio
+│   ├── company-network.drawio
+│   └── mermaid/                      # Mermaid source + graph spec pairs for each supported type
 └── evals/                            # Test prompts + graders (`claude plugin eval` layout)
 tests/                                # unittest suite for the scripts, docs and examples
 .claude/skills/drawio-charts          # Symlink to skills/drawio-charts, so opening this

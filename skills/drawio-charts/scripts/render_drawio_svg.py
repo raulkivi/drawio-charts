@@ -18,10 +18,10 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
-from dataclasses import dataclass
 from pathlib import Path
 
 from drawio_io import Cell, cells, parse_pages
+from edge_router import Rect, orthogonalise, side_anchor
 from text_metrics import FONT_SIZE, label_lines, text_width, wrap
 
 Point = tuple[float, float]
@@ -30,20 +30,7 @@ MARGIN = 10
 SKIP_SHAPES = {"edgeLabel"}
 
 
-@dataclass
-class Box:
-    x: float
-    y: float
-    w: float
-    h: float
-
-    @property
-    def cx(self) -> float:
-        return self.x + self.w / 2
-
-    @property
-    def cy(self) -> float:
-        return self.y + self.h / 2
+Box = Rect
 
 
 def parse_style(style: str | None) -> dict[str, str]:
@@ -92,6 +79,7 @@ def render_svg(xml_text: str) -> str:
     by_id = {c.id: c for c in all_cells}
     canvas = Canvas()
     renderer = _Renderer(canvas, by_id)
+    renderer.assign_slots([c for c in all_cells if c.is_edge])
     for cell in all_cells:
         if cell.is_vertex and not _is_edge_child(cell, by_id):
             renderer.vertex(cell)
@@ -146,6 +134,7 @@ class _Renderer:
         self.c = canvas
         self.by_id = by_id
         self._origin_cache: dict[str, Point] = {}
+        self.slots: dict[tuple[str, str], float] = {}   # (edge id, "start"/"end") -> 0..1 along the side
 
     def origin(self, cell_id: str | None) -> Point:
         """Absolute top-left of a cell's coordinate space (its parent chain)."""
@@ -239,7 +228,7 @@ class _Renderer:
                    marker_start=self.marker(style.get("startArrow", "none"), style.get("startFill", "1"), stroke),
                    **{"data-edge": cell.id})
         if cell.get("value"):
-            mid = _along(points, 0.5)
+            mid = _along(points, (_float(cell.geometry(), "x") + 1) / 2)
             if style.get("verticalAlign") == "bottom":
                 if style.get("align") == "left":   # self-message: label right of the loop
                     area = Box(points[1][0] + 6, points[1][1] - 18, 200, 16)
@@ -285,17 +274,42 @@ class _Renderer:
         start = fixed(source_box, "exit") or terminal.get("sourcePoint")
         end = fixed(target_box, "entry") or terminal.get("targetPoint")
         orthogonal = style.get("edgeStyle") in ("orthogonalEdgeStyle", "elbowEdgeStyle", "entityRelationEdgeStyle")
+        horizontal = style.get("edgeStyle") == "entityRelationEdgeStyle"
         sides = {}
         if start is None and source_box is not None:
             towards = waypoints[0] if waypoints else (end or (target_box and (target_box.cx, target_box.cy)))
-            start, sides["start"] = _side_anchor(source_box, towards, style.get("edgeStyle") == "entityRelationEdgeStyle")
+            start, sides["start"] = side_anchor(source_box, towards, horizontal, self.slots.get((cell.id, "start"), 0.5))
         if end is None and target_box is not None:
             towards = waypoints[-1] if waypoints else start
-            end, sides["end"] = _side_anchor(target_box, towards, style.get("edgeStyle") == "entityRelationEdgeStyle")
+            end, sides["end"] = side_anchor(target_box, towards, horizontal, self.slots.get((cell.id, "end"), 0.5))
         if start is None or end is None:
             return []
         points = [start, *waypoints, end]
-        return _orthogonalise(points, sides.get("start"), sides.get("end")) if orthogonal else points
+        return orthogonalise(points, sides.get("start"), sides.get("end")) if orthogonal else points
+
+    def assign_slots(self, edges: list[Cell]) -> None:
+        """Spread edge ends that meet the same side of a node, ordered to avoid crossing."""
+        by_side: dict[tuple[str, str], list[tuple[float, str, str]]] = {}
+        for cell in edges:
+            route = self.route(cell, parse_style(cell.get("style")))
+            if len(route) < 2:
+                continue
+            style = parse_style(cell.get("style"))
+            for end, cell_id, point, neighbour, constrained in (
+                    ("start", cell.get("source"), route[0], route[1], "exitX" in style),
+                    ("end", cell.get("target"), route[-1], route[-2], "entryX" in style)):
+                box_cell = self.by_id.get(cell_id)
+                if box_cell is None or constrained:
+                    continue
+                box = self.box(box_cell)
+                side = _side_of(box, point)
+                along = neighbour[0] if side in ("top", "bottom") else neighbour[1]
+                by_side.setdefault((cell_id, side), []).append((along, cell.id, end))
+        for ends in by_side.values():
+            if len(ends) < 2:
+                continue
+            for i, (_, edge_id, end) in enumerate(sorted(ends)):
+                self.slots[(edge_id, end)] = (i + 1) / (len(ends) + 1)
 
     def marker(self, kind: str, filled: str, colour: str) -> str | None:
         if kind in ("none", "") or kind not in MARKERS:
@@ -334,45 +348,10 @@ MARKERS: dict[str, tuple[str, list[tuple[str, dict[str, str]]]]] = {
 }
 
 
-def _side_anchor(box: Box, towards: Point | None, horizontal_only: bool = False) -> tuple[Point, str]:
-    if towards is None:
-        return (box.cx, box.y + box.h), "bottom"
-    dx, dy = towards[0] - box.cx, towards[1] - box.cy
-    if not horizontal_only and abs(dy) * box.w >= abs(dx) * box.h:
-        return ((box.cx, box.y + box.h), "bottom") if dy >= 0 else ((box.cx, box.y), "top")
-    return ((box.x + box.w, box.cy), "right") if dx >= 0 else ((box.x, box.cy), "left")
-
-
-def _orthogonalise(points: list[Point], start_side: str | None, end_side: str | None) -> list[Point]:
-    result = [points[0]]
-    vertical = start_side in ("top", "bottom") if start_side else None
-    for i, q in enumerate(points[1:], start=1):
-        p = result[-1]
-        last = i == len(points) - 1
-        if abs(p[0] - q[0]) < 0.01 or abs(p[1] - q[1]) < 0.01:
-            result.append(q)
-            vertical = abs(p[0] - q[0]) < 0.01
-            continue
-        if vertical is None:
-            vertical = abs(q[1] - p[1]) > abs(q[0] - p[0])
-        end_vertical = end_side in ("top", "bottom") if (last and end_side) else None
-        # Z shapes cross over halfway between the points, which in a layered layout is
-        # the gap between ranks, so they stay clear of shapes. An L is only used to
-        # meet an end that must be entered from the side the route isn't travelling.
-        if vertical and end_vertical is not False:      # Z: down, across, down
-            mid = (p[1] + q[1]) / 2
-            result += [(p[0], mid), (q[0], mid)]
-        elif not vertical and end_vertical is not True:  # Z: across, down, across
-            mid = (p[0] + q[0]) / 2
-            result += [(mid, p[1]), (mid, q[1])]
-        elif vertical:                                   # L: down then across
-            result.append((p[0], q[1]))
-            vertical = False
-        else:                                            # L: across then down
-            result.append((q[0], p[1]))
-            vertical = True
-        result.append(q)
-    return result
+def _side_of(box: Box, point: Point) -> str:
+    distances = {"top": abs(point[1] - box.y), "bottom": abs(point[1] - box.y - box.h),
+                 "left": abs(point[0] - box.x), "right": abs(point[0] - box.x - box.w)}
+    return min(distances, key=distances.get)
 
 
 def _along(points: list[Point], fraction: float) -> Point:

@@ -149,3 +149,55 @@ class CommandLineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RouteSpacingTest(unittest.TestCase):
+    def absolute_box(self, cells_, cell_id):
+        x = y = 0.0
+        current = cells_[cell_id]
+        w, h = float(current.geometry().get("width")), float(current.geometry().get("height"))
+        while current is not None and current.is_vertex:
+            x += float(current.geometry().get("x", 0))
+            y += float(current.geometry().get("y", 0))
+            current = cells_.get(current.get("parent"))
+        return x, y, w, h
+
+    def test_routes_do_not_cross_unrelated_nodes_in_the_examples(self):
+        from drawio_io import cells, parse_pages
+        examples = Path(SCRIPTS_DIR).parent / "assets/examples/mermaid"
+        for spec_path in sorted(examples.glob("*.json")):
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            if spec["type"] == "sequence":
+                continue
+            with self.subTest(example=spec_path.name):
+                xml = convert(spec)
+                cells_ = {c.id: c for c in cells(parse_pages(xml)[0].model)}
+                root = svg_root(render_svg(xml))   # path data is in draw.io coordinates
+                def is_container(cell):
+                    return cell is not None and "container=1" in (cell.get("style") or "")
+
+                # obstacles: nodes on the page or inside a group (not groups, rows or edge labels)
+                leaves = [c for c in cells_.values() if c.is_vertex and not is_container(c)
+                          and (c.get("parent") == "1" or is_container(cells_.get(c.get("parent"))))]
+                for path in (p for p in root.iter(f"{SVG}path") if p.get("data-edge")):
+                    edge = cells_[path.get("data-edge")]
+                    points = render_drawio_svg.path_points(path.get("d"))
+                    for node in leaves:
+                        if node.id in (edge.get("source"), edge.get("target")):
+                            continue
+                        x, y, w, h = self.absolute_box(cells_, node.id)
+                        for (x1, y1), (x2, y2) in zip(points, points[1:]):
+                            crosses = (min(x1, x2) < x + w - 1 and max(x1, x2) > x + 1
+                                       and min(y1, y2) < y + h - 1 and max(y1, y2) > y + 1)
+                            self.assertFalse(crosses, f"{edge.get('source')}->{edge.get('target')} crosses {node.id}")
+
+    def test_edges_sharing_a_side_end_at_different_points(self):
+        xml = drawio(vertex("a", geometry='<mxGeometry x="0" y="0" width="100" height="40" as="geometry"/>')
+                     + vertex("b", geometry='<mxGeometry x="0" y="200" width="100" height="40" as="geometry"/>')
+                     + vertex("c", geometry='<mxGeometry x="300" y="0" width="100" height="40" as="geometry"/>')
+                     + edge("e1", "a", "b", style="edgeStyle=orthogonalEdgeStyle;")
+                     + edge("e2", "c", "b", style="edgeStyle=orthogonalEdgeStyle;"))
+        root = svg_root(render_svg(xml))
+        ends = [render_drawio_svg.path_points(p.get("d"))[-1] for p in root.iter(f"{SVG}path") if p.get("data-edge")]
+        self.assertEqual(len(ends), 2)
+        self.assertNotEqual(ends[0], ends[1])

@@ -46,7 +46,7 @@ class DrawioBuilder:
     def edge(self, cell_id: str, value: str, style: str, parent: str,
              source: str | None = None, target: str | None = None,
              points: list[Point] = (), source_point: Point | None = None,
-             target_point: Point | None = None) -> str:
+             target_point: Point | None = None, label_position: float | None = None) -> str:
         attributes = {"id": cell_id, "value": value, "style": style, "parent": parent}
         if source is not None:
             attributes["source"] = source
@@ -54,7 +54,10 @@ class DrawioBuilder:
             attributes["target"] = target
         attributes["edge"] = "1"
         cell = ET.Element("mxCell", attributes)
-        geometry = ET.SubElement(cell, "mxGeometry", {"relative": "1", "as": "geometry"})
+        geometry_attributes = {"relative": "1", "as": "geometry"}
+        if label_position is not None:
+            geometry_attributes = {"x": _num(label_position), **geometry_attributes}
+        geometry = ET.SubElement(cell, "mxGeometry", geometry_attributes)
         for point, name in ((source_point, "sourcePoint"), (target_point, "targetPoint")):
             if point is not None:
                 ET.SubElement(geometry, "mxPoint", {"x": _num(point[0]), "y": _num(point[1]), "as": name})

@@ -1,0 +1,77 @@
+{
+  "type": "state",
+  "nodes": [
+    {
+      "id": "_start",
+      "shape": "start"
+    },
+    {
+      "id": "Draft",
+      "shape": "rounded"
+    },
+    {
+      "id": "Review",
+      "shape": "rounded"
+    },
+    {
+      "id": "_published_start",
+      "shape": "start"
+    },
+    {
+      "id": "Live",
+      "shape": "rounded"
+    },
+    {
+      "id": "Archived",
+      "shape": "rounded"
+    },
+    {
+      "id": "_end",
+      "shape": "end"
+    }
+  ],
+  "groups": [
+    {
+      "id": "Published",
+      "members": [
+        "_published_start",
+        "Live",
+        "Archived"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "_start",
+      "to": "Draft"
+    },
+    {
+      "from": "Draft",
+      "to": "Review",
+      "label": "submit"
+    },
+    {
+      "from": "Review",
+      "to": "Draft",
+      "label": "request changes"
+    },
+    {
+      "from": "Review",
+      "to": "Published",
+      "label": "approve"
+    },
+    {
+      "from": "_published_start",
+      "to": "Live"
+    },
+    {
+      "from": "Live",
+      "to": "Archived",
+      "label": "expire"
+    },
+    {
+      "from": "Published",
+      "to": "_end"
+    }
+  ]
+}

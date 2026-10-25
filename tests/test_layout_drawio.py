@@ -250,3 +250,27 @@ class CommandLineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EdgeSeparationTest(unittest.TestCase):
+    def test_edges_between_the_same_pair_leave_and_enter_at_different_points(self):
+        spec = {"type": "state", "nodes": [{"id": "Draft"}, {"id": "Review"}], "edges": [
+            {"from": "Draft", "to": "Review", "label": "submit"},
+            {"from": "Review", "to": "Draft", "label": "request changes"}]}
+        edges = [c for c in page_cells(convert(spec)) if c.is_edge]
+        styles = [dict(p.split("=", 1) for p in e.get("style").split(";") if "=" in p) for e in edges]
+        exits = {(s["exitX"], s["exitY"]) for s in styles}
+        self.assertEqual(len(exits), 2)
+        import re as _re
+        from render_drawio_svg import render_svg
+        svg = render_svg(convert(spec))
+        ys = {label: float(_re.search(rf'y="([\d.]+)"[^>]*>{label}<', svg).group(1)) for label in ("submit", "request changes")}
+        self.assertGreaterEqual(abs(ys["submit"] - ys["request changes"]), 14)
+
+    def test_edge_detours_around_a_node_in_its_way(self):
+        spec = json.loads((Path(SCRIPTS_DIR).parent / "assets/examples/mermaid/deploy-pipeline-flowchart.json")
+                          .read_text(encoding="utf-8"))
+        xml = convert(spec)
+        cells_ = by_id(xml)
+        edge = next(c for c in cells_.values() if c.is_edge and c.get("source") == "smoke" and c.get("target") == "rollback")
+        self.assertIsNotNone(edge.geometry().find("Array"))

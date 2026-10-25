@@ -1,0 +1,26 @@
+classDiagram
+  class PaymentMethod {
+    <<interface>>
+    +authorize(amount) bool
+  }
+  class Card {
+    -number: string
+    -expiry: date
+    +authorize(amount) bool
+  }
+  class Wallet {
+    -balance: decimal
+    +authorize(amount) bool
+  }
+  class Order {
+    +id: int
+    +total() decimal
+  }
+  class Customer {
+    +name: string
+  }
+  PaymentMethod <|.. Card
+  PaymentMethod <|.. Wallet
+  Customer "1" --> "*" Order : places
+  Order *-- "1..*" LineItem
+  Order o-- PaymentMethod
